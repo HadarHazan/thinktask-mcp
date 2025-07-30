@@ -1,0 +1,261 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { AiService } from './ai.service';
+import { TasksService } from './tasks.service';
+
+export interface McpToolCall {
+  name: string;
+  arguments: {
+    instruction: string;
+    todoist_api_key: string;
+  };
+}
+
+export interface McpToolResult {
+  content: Array<{
+    type: 'text';
+    text: string;
+  }>;
+  isError?: boolean;
+}
+
+interface ActionExecutionResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+interface TodoistAction {
+  id: string;
+  endpoint: string;
+  method: string;
+  body: Record<string, unknown>;
+  depends_on?: string | string[];
+}
+
+@Injectable()
+export class McpService {
+  private readonly logger = new Logger(McpService.name);
+
+  constructor(
+    private readonly aiService: AiService,
+    private readonly tasksService: TasksService,
+  ) {}
+
+  async handleToolCall(toolCall: McpToolCall): Promise<McpToolResult> {
+    try {
+      switch (toolCall.name) {
+        case 'plan_intelligent_tasks':
+          return await this.planIntelligentTasks(toolCall.arguments);
+        default:
+          throw new Error(`Unknown tool: ${toolCall.name}`);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Tool execution failed: ${errorMessage}`);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `❌ Error: ${errorMessage}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  private async planIntelligentTasks(args: {
+    instruction: string;
+    todoist_api_key: string;
+  }): Promise<McpToolResult> {
+    const { instruction, todoist_api_key } = args;
+
+    // Validate required parameters
+    if (!instruction?.trim()) {
+      throw new Error('Instruction is required and cannot be empty');
+    }
+
+    if (!todoist_api_key?.trim()) {
+      throw new Error('Todoist API key is required');
+    }
+
+    // Validate Todoist API key
+    const isValidTodoistKey =
+      await this.tasksService.validateTodoistApiKey(todoist_api_key);
+    if (!isValidTodoistKey) {
+      throw new Error('Invalid Todoist API key provided');
+    }
+
+    try {
+      // Fetch existing projects and sections
+      this.logger.log('📥 Fetching existing Todoist data...');
+      const [projectsList, sectionsList] = await Promise.all([
+        this.tasksService.fetchAllProjects(todoist_api_key),
+        this.tasksService.fetchAllSections(todoist_api_key),
+      ]);
+
+      // Parse the instruction with AI
+      this.logger.log('🤖 Processing instruction with Claude...');
+      const actions = await this.aiService.parseTask(
+        instruction,
+        sectionsList,
+        projectsList,
+      );
+
+      this.logger.log(`📋 Generated ${actions.length} actions to execute`);
+
+      // Execute the actions
+      this.logger.log('⚡ Executing Todoist API calls...');
+      const results = await this.tasksService.executeActions(
+        actions,
+        todoist_api_key,
+      );
+
+      // Format the response
+      const createdItems = this.formatCreatedItems(results, actions);
+      const summary = this.generateSummary(actions, results);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `✅ **ThinkTask Planning Complete!**
+
+${summary}
+
+**Created Items:**
+${createdItems}
+
+**Original Instruction:** "${instruction}"
+
+All tasks have been intelligently organized in your Todoist with proper scheduling, priorities, and dependencies. Your AI-powered planning assistant has transformed your natural language request into a structured, actionable plan! 🎯`,
+          },
+        ],
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Planning execution failed:', errorMessage);
+      throw new Error(`Planning failed: ${errorMessage}`);
+    }
+  }
+
+  private formatCreatedItems(
+    results: Map<string, ActionExecutionResult>,
+    actions: TodoistAction[],
+  ): string {
+    const items: string[] = [];
+
+    actions.forEach((action) => {
+      const result = results.get(action.id);
+      if (result?.success && result.data) {
+        const emoji = this.getEmojiForEndpoint(action.endpoint);
+        const name = this.extractNameFromResult(result.data) || 'Unnamed item';
+        items.push(`${emoji} **${name}**`);
+      }
+    });
+
+    return items.length > 0 ? items.join('\n') : 'No items were created';
+  }
+
+  private extractNameFromResult(data: unknown): string | null {
+    if (typeof data === 'object' && data !== null) {
+      const obj = data as Record<string, unknown>;
+
+      if (typeof obj.name === 'string') return obj.name;
+      if (typeof obj.content === 'string') return obj.content;
+    }
+
+    return null;
+  }
+
+  private generateSummary(
+    actions: TodoistAction[],
+    results: Map<string, ActionExecutionResult>,
+  ): string {
+    const counts = {
+      projects: 0,
+      sections: 0,
+      tasks: 0,
+    };
+
+    actions.forEach((action) => {
+      const result = results.get(action.id);
+      if (result?.success) {
+        if (action.endpoint === 'projects') counts.projects++;
+        else if (action.endpoint === 'sections') counts.sections++;
+        else if (action.endpoint === 'tasks') counts.tasks++;
+      }
+    });
+
+    const parts: string[] = [];
+    if (counts.projects > 0) {
+      parts.push(`${counts.projects} project${counts.projects > 1 ? 's' : ''}`);
+    }
+    if (counts.sections > 0) {
+      parts.push(`${counts.sections} section${counts.sections > 1 ? 's' : ''}`);
+    }
+    if (counts.tasks > 0) {
+      parts.push(`${counts.tasks} task${counts.tasks > 1 ? 's' : ''}`);
+    }
+
+    return parts.length > 0
+      ? `Successfully created ${parts.join(', ')}.`
+      : 'No items were created.';
+  }
+
+  private getEmojiForEndpoint(endpoint: string): string {
+    switch (endpoint) {
+      case 'projects':
+        return '📁';
+      case 'sections':
+        return '📂';
+      case 'tasks':
+        return '✅';
+      default:
+        return '📋';
+    }
+  }
+
+  getToolsDefinition(): Array<{
+    name: string;
+    description: string;
+    inputSchema: {
+      type: string;
+      properties: Record<
+        string,
+        {
+          type: string;
+          description: string;
+        }
+      >;
+      required: string[];
+    };
+  }> {
+    return [
+      {
+        name: 'plan_intelligent_tasks',
+        description:
+          'Transform any natural language instruction into comprehensive Todoist projects, sections, and tasks with intelligent scheduling and organization. This is the core ThinkTask functionality that goes beyond simple task creation to provide real project planning.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            instruction: {
+              type: 'string',
+              description:
+                'Natural language instruction describing what you want to accomplish. Examples: "Plan my wedding for May 15", "Launch my consulting business", "Call mom tomorrow at 2pm", "Organize a move to a new apartment next month"',
+            },
+            todoist_api_key: {
+              type: 'string',
+              description:
+                'Your Todoist API key (required). Get it from Todoist Settings > Integrations > API token',
+            },
+          },
+          required: ['instruction', 'todoist_api_key'],
+        },
+      },
+    ];
+  }
+}
