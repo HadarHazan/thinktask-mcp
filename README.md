@@ -29,35 +29,40 @@ Traditional task management tools just create basic tasks. ThinkTask uses AI to 
 - **🔗 Dependency Resolution**: Creates tasks in the right order
 - **📊 Project Structure**: Automatically creates projects, sections, and tasks as needed
 
-## 🚀 Quick Start
+## 🔌 Connect to MCP Clients
 
-### 1. Install Dependencies
+### 🖥️ Claude Desktop
 
-```bash
-yarn install
+To use ThinkTask as an MCP tool in Claude Desktop, add the following to your `mcpServers` configuration:
+
+```json
+{
+  "mcpServers": {
+    "thinktask": {
+      "command": "npx",
+      "args": ["thinktask-mcp-agent"],
+      "env": {
+        "TODOIST_API_TOKEN": "your_todoist_api_token"
+      }
+    }
+  }
+}
 ```
 
-### 2. Configure Environment
+### ✅ Prerequisites
 
-```bash
-cp .env.example .env
-# Edit .env and add your Anthropic API key (optional)
-```
+- **Node.js** 18 or newer
+- A valid **Todoist API token** (found in your Todoist Integrations settings)
+- **No manual installation needed** – `npx` will automatically download and run the latest version from npm
 
-### 3. Build and Run
+### 🔑 Environment Variables
 
-```bash
-# Development
-yarn start:dev
+- `TODOIST_API_TOKEN`: required to authenticate with Todoist
+- Optionally, you may set `ANTHROPIC_API_KEY` in your environment for Claude AI features
 
-# Production
-yarn build
-yarn start:prod
+---
 
-# MCP Server
-yarn build
-yarn start:mcp
-```
+Once added, Claude Desktop will be able to call ThinkTask as a tool and return structured tasks directly to Todoist.
 
 ## 🔧 API Endpoints
 
@@ -102,102 +107,6 @@ Transform natural language into comprehensive Todoist structures.
 }
 ```
 
-## 🔌 Connect to MCP Clients
-
-### Claude Desktop
-
-Add to your MCP settings:
-
-```json
-{
-  "mcpServers": {
-    "thinktask": {
-      "command": "npx",
-      "args": [
-        "@modelcontextprotocol/server-fetch",
-        "http://your-domain.com/api/mcp"
-      ]
-    }
-  }
-}
-```
-
-### Direct MCP Server
-
-```bash
-yarn start:mcp
-```
-
-## 🏗️ Architecture
-
-```
-ThinkTask MCP Service
-├── 🤖 AI Service (Claude 3.5 Sonnet)
-│   └── Natural language → Structured JSON
-├── 📋 Tasks Service (Todoist API)
-│   └── Execute API calls with dependency resolution
-├── 🔧 MCP Service
-│   └── Handle MCP protocol and tool calls
-└── 🌐 REST API
-    └── HTTP endpoints for direct access
-```
-
-## 📁 Project Structure
-
-```
-src/
-├── controllers/
-│   └── mcp.controller.ts      # MCP REST endpoints
-├── services/
-│   ├── ai.service.ts          # Claude AI integration
-│   ├── tasks.service.ts       # Todoist API handling
-│   └── mcp.service.ts         # MCP protocol logic
-├── dto/
-│   └── mcp.dto.ts            # Data transfer objects
-├── config/
-│   └── anthropic.config.ts    # AI configuration
-├── main.ts                    # NestJS application entry
-└── mcp-server.ts             # Standalone MCP server
-```
-
-## 🔑 API Keys
-
-### Todoist API Key
-
-1. Go to Todoist Settings
-2. Navigate to Integrations
-3. Find "API token" and copy it
-
-### Anthropic API Key (Optional)
-
-1. Sign up at [console.anthropic.com](https://console.anthropic.com)
-2. Create an API key
-3. Set as `ANTHROPIC_API_KEY` environment variable
-4. Or provide per-request in tool calls
-
-## 🌍 Deployment
-
-### Docker
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN yarn install
-COPY . .
-RUN yarn build
-EXPOSE 3000
-CMD ["yarn", "start:prod"]
-```
-
-### Environment Variables
-
-```bash
-ANTHROPIC_API_KEY=your_key_here
-PORT=3000
-NODE_ENV=production
-```
-
 ## 🧪 Example Use Cases
 
 - **📅 Event Planning**: "Plan my birthday party next month"
@@ -207,24 +116,24 @@ NODE_ENV=production
 - **🎯 Personal Goals**: "Get in shape for summer"
 - **🏠 Home Projects**: "Renovate my kitchen"
 
-## 🤝 Contributing
+```
 
-1. Fork the repository
-2. Create your feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+```
 
-## 📄 License
+## 🏗️ Architecture
 
-MIT License - see LICENSE file for details
+ThinkTask MCP Service
+├── 🤖 AI Service (Claude 3.5 Sonnet)
+│ └── Natural language → Structured JSON
+├── 📋 Tasks Service (Todoist API)
+│ └── Execute API calls with dependency resolution
+├── 🔧 MCP Service
+│ └── Handle MCP protocol and tool calls
+└── 🌐 REST API
+└── HTTP endpoints for direct access
 
-## 🙋‍♂️ Support
+```
 
-- Create an issue for bugs or feature requests
-- Check existing issues before creating new ones
-- Provide detailed information about your use case
-
----
+```
 
 **Made with ❤️ for productivity enthusiasts who believe AI should think, not just automate.**
