@@ -70,15 +70,25 @@ export class McpService {
     instruction: string;
     todoist_api_key: string;
   }): Promise<McpToolResult> {
-    const { instruction, todoist_api_key } = args;
+    const { instruction } = args;
 
+    const todoist_api_key =
+      args.todoist_api_key || process.env.TODOIST_API_TOKEN;
     // Validate required parameters
     if (!instruction?.trim()) {
       throw new Error('Instruction is required and cannot be empty');
     }
 
     if (!todoist_api_key?.trim()) {
-      throw new Error('Todoist API key is required');
+      return {
+        content: [
+          {
+            type: 'text',
+            text: '⚠️ No Todoist API key provided. Please provide a todoist_api_key in the request or set the TODOIST_API_TOKEN environment variable if you want to use Todoist features.',
+          },
+        ],
+        isError: true,
+      };
     }
 
     // Validate Todoist API key
@@ -250,10 +260,10 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
             todoist_api_key: {
               type: 'string',
               description:
-                'Your Todoist API key (required). Get it from Todoist Settings > Integrations > API token',
+                'Your Todoist API key (optional). If not provided, the service will use the TODOIST_API_TOKEN environment variable.',
             },
           },
-          required: ['instruction', 'todoist_api_key'],
+          required: ['instruction'],
         },
       },
     ];

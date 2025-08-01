@@ -60,15 +60,6 @@ server.setRequestHandler(
         );
       }
 
-      if (
-        !toolArgs.todoist_api_key ||
-        typeof toolArgs.todoist_api_key !== 'string'
-      ) {
-        throw new Error(
-          'todoist_api_key parameter is required and must be a string',
-        );
-      }
-
       const result = await mcpService.handleToolCall({
         name,
         arguments: toolArgs,
