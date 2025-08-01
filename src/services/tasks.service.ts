@@ -89,6 +89,10 @@ export class TasksService {
 
     for (const action of actions) {
       try {
+        this.logger.log(
+          `Row Action ${action.id}  is ${JSON.stringify(action)}`,
+        );
+
         const result = await this.executeAction(action, apiKey, results);
         results.set(action.id, { success: true, data: result });
         this.logger.log(`✅ Action ${action.id} completed successfully`);

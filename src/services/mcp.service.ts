@@ -163,7 +163,28 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
       if (result?.success && result.data) {
         const emoji = this.getEmojiForEndpoint(action.endpoint);
         const name = this.extractNameFromResult(result.data) || 'Unnamed item';
-        items.push(`${emoji} **${name}**`);
+
+        let dueDate = '';
+        let dueString = '';
+        if (action.body) {
+          dueDate = (action.body as any).due_date || '';
+          dueString = (action.body as any).due_string || '';
+        }
+        // Optionally, try to get from result.data if available
+        if (result.data && typeof result.data === 'object') {
+          const data = result.data as any;
+          if (data.due) {
+            dueDate = data.due.date || dueDate;
+            dueString = data.due.string || dueString;
+          }
+        }
+
+        let dateInfo = '';
+        if (dueDate || dueString) {
+          dateInfo = ` (Due: ${dueString}${dueDate ? ` | ${dueDate}` : ''})`;
+        }
+
+        items.push(`${emoji} **${name}**${dateInfo}`);
       }
     });
 

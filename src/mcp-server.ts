@@ -11,6 +11,16 @@ import { AiService } from './services/ai.service.js';
 import { TasksService } from './services/tasks.service.js';
 import { McpService } from './services/mcp.service.js';
 import { HttpService } from '@nestjs/axios';
+import { Logger } from '@nestjs/common';
+
+// Patch NestJS logger to use stderr only
+Logger.overrideLogger({
+  log: (...args: any[]) => console.error(...args),
+  error: (...args: any[]) => console.error(...args),
+  warn: (...args: any[]) => console.error(...args),
+  debug: (...args: any[]) => {},
+  verbose: (...args: any[]) => {},
+});
 
 interface ToolArguments {
   instruction: string;

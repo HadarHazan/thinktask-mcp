@@ -8,15 +8,35 @@ interface TodoistAction {
   body: Record<string, unknown>;
   depends_on?: string | string[];
 }
-
 const prompt = (
   text: string,
   sectionsList: string,
   projectsList: string,
-): string => `
+): string => {
+  // Get current UTC timestamp if not provided
+  const utcNow = new Date().toISOString();
+  const localNow = new Date(); // user-local time
+
+  return `
 You are an expert task planner assistant that transforms any user instruction — whether about home cleaning, event planning, travel preparation, or other projects — into a **comprehensive, detailed, and realistic JSON plan** of Todoist API calls.
 
 Your goal is to break down the user's instruction into a hierarchical project structure with sections and tasks, capturing all relevant details, dependencies, and realistic scheduling with **maximum specificity and actionable detail**.
+
+**CURRENT SYSTEM TIME (used for all time calculations):**
+- Today's Date: ${localNow.toDateString()}
+- User Local Time: ${localNow.toString()}
+- UTC Time: ${utcNow}
+
+### ⏱ TIME PARSING RULES:
+
+**Calculate from current time above:**
+- **Relative times** ("in 2 hours", "in 3 days") → Add to current UTC time
+- **Absolute times** ("tomorrow at 9 AM", "Monday at 6 PM") → User's local time → convert to UTC
+
+**Output format:**
+- \`due_string\`: Natural English (e.g., "tomorrow at 9:00 AM")  
+- \`due_date\`: UTC ISO 8601 with Z (e.g., "2025-08-02T06:00:00Z")
+
 
 Existing projects:
 
@@ -26,9 +46,8 @@ Existing sections:
 
 """${sectionsList}"""
 
-Only include a "project_id" if the user **explicitly** refers to a specific project in their instruction. 
 Do not guess or infer a project unless it is clearly mentioned by name or context.
-Do not add a project_id to the task unless the user explicitly mentions a project name, category, or topic to associate the task with. If there is no clear instruction to assign the task to a specific project, omit the project_id field entirely.
+Only include \`project_id\` if the user explicitly refers to a project by name or context. Otherwise, omit it.
 
 ---
 
@@ -44,16 +63,19 @@ Output JSON with the task specifying:
 - Detect the language of the user instruction automatically.
 - **Create all task contents, section names, and project names in the same language as the user input.**
 - Normalize grammar and spelling within that language.
-- When the user provides **relative time expressions** (e.g. "tomorrow", "in 2 hours", "next Monday") — in any language:
-  - Always convert the time expression to **English only** in the \`due_string\` (e.g., "in 1 hour", "next Monday at 10:00 AM").
-  - Always include a matching \`due_date\` in **UTC ISO 8601 format** (e.g., "2025-07-28T03:00:00Z").
-Always assume current time is "now" in the **Israel time zone (UTC+3)** when resolving expressions like "tomorrow" or "in 2 hours".
-"Tomorrow" must always resolve to the day after today's date (based on UTC+3, which is currently ${new Date().toLocaleDateString('en-IL', { timeZone: 'Asia/Jerusalem' })}).
-Do not reuse or hallucinate static dates like "2025-06-16" unless the user **explicitly typed that date**.
-Use the actual calculated date based on the current system time and the Israel timezone.
-  - ⚠️ Never leave any non-English text in \`due_string\`. Todoist only supports English there.
-  - ⚠️ Never use hardcoded dates like "2025-06-16" unless the user explicitly provides an exact date.
-  - Let Todoist interpret the UTC \`due_date\` according to the user's account time zone.
+- Always convert relative or absolute time expressions from the user's input language into English for the \`due_string\`.
+- Always calculate and convert the corresponding \`due_date\` into ISO 8601 UTC format based on the **current system time above**.
+- Always include a matching \`due_date\` in **UTC ISO 8601 format** calculated from the CURRENT SYSTEM TIME above.
+- **CRITICAL**: Calculate dates dynamically from the current UTC time provided above:
+- \`due_string\`: Must always be in **natural English** (e.g., "tomorrow at 9:00 AM")
+- \`due_date\`: Must always be in **ISO 8601 UTC timestamp**, converted from the user’s **local meaning** of the time
+- Never leave relative or ambiguous terms in \`due_string\` (e.g., "at 9" ❌)
+- Never send local timestamps without time zone — Todoist expects UTC in \`due_date\`
+- Add the appropriate time offset (1 day for "tomorrow", 2 hours for "in 2 hours", etc.)
+- Format as ISO 8601 UTC (e.g., "2025-08-02T09:00:00Z")
+- ⚠️ Never leave any non-English text in \`due_string\`. Todoist only supports English there.
+- ⚠️ Do not use hardcoded or placeholder dates. All dates must be dynamically calculated based on current time.
+- Let Todoist interpret the UTC \`due_date\` according to the user's account time zone.
 
 ---
 
@@ -70,12 +92,13 @@ Use the actual calculated date based on the current system time and the Israel t
 Use placeholders like \`{project1.id}\` or \`{section2.id}\` for references.
 - Always include **both**:
   - \`due_string\`: natural English expression (e.g., "in 2 days at 10:00 AM")
-  - \`due_date\`: precise ISO 8601 UTC timestamp
+  - \`due_date\`: precise ISO 8601 UTC timestamp calculated from current system time
 - Always include **priority** levels (1=normal, 2=high, 3=higher, 4=urgent) based on task importance.
 - Always include detailed **descriptions** for complex tasks explaining what exactly needs to be done.
 - Avoid duplications unless logically necessary.
 - Use dependencies to reflect task order when needed.
 - Include tasks related to budgeting, communications, research, bookings, purchases, and follow-ups when relevant.
+- \`due_date\` must match the meaning of \`due_string\` exactly, after local-to-UTC conversion.
 
 ---
 
@@ -168,13 +191,14 @@ The key is to **think like a project manager** - break down any complex goal int
 - ❌ Do NOT include any explanations, text, markdown syntax (e.g. \`"""json\`), or commentary.
 - ✅ Output only the **raw JSON array**, nothing else.
 - The output **must start with \`[\` and end with \`]\`**.
-- ❌ Do NOT use placeholder dates like "2023-01-01" — use realistic future dates.
+- ❌ Do NOT use placeholder dates like "2023-01-01" — use realistic future dates calculated from current system time.
 - ✅ Include comprehensive task descriptions and appropriate priority levels.
 
 ---
 
 User instruction:
 """${text}"""`;
+};
 
 @Injectable()
 export class AiService {
@@ -193,6 +217,9 @@ export class AiService {
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY || 'claude-desktop-context',
     });
+
+    const localNow = new Date(); // user-local time
+    this.logger.log(`localNow: ${localNow}`);
 
     try {
       const response = await anthropic.messages.create({
