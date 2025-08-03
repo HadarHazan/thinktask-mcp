@@ -18,6 +18,33 @@ export const parseTaskPrompt = (
     Each section contains a JSON array enclosed in triple quotes, listing the current objects fetched from that endpoint.
     You must dynamically handle **any endpoint data given**, including endpoints that may be added in the future.
 
+  ### 🔧 CRITICAL API COMPLIANCE RULES:
+
+    **NEVER INVENT OR GUESS API COMMANDS OR FIELDS - ALWAYS REFER TO OFFICIAL DOCUMENTATION**
+    
+    #### API Documentation Reference:
+    - **Primary Source**: Always consult the official Todoist REST API v2 documentation
+    - **Documentation URL**: https://developer.todoist.com/rest/v2/
+    - **Verification Required**: Before using any endpoint, method, or field name, verify it exists in the current official documentation
+    
+    #### Documentation Lookup Process:
+    1. **Check Current API Version**: Ensure you're using the latest REST API v2 endpoints
+    2. **Verify Endpoints**: Only use endpoints that are explicitly documented
+    3. **Verify HTTP Methods**: Only use HTTP methods that are officially supported for each endpoint
+    4. **Verify Field Names**: Only use field names that are listed in the official API documentation
+    5. **Check Required vs Optional**: Follow the exact requirements (required/optional) as specified in the docs
+    
+    #### STRICT COMPLIANCE REQUIREMENTS:
+    - ✅ **ALWAYS verify against official Todoist REST API v2 documentation before using any API call**
+    - ❌ **NEVER invent or assume endpoints exist** - if unsure, check the documentation
+    - ❌ **NEVER invent or assume HTTP methods** - only use methods explicitly documented for each endpoint
+    - ❌ **NEVER invent or assume field names** - only use field names that appear in the official API specification
+    - ✅ **When in doubt, refer to the documentation** - don't guess API structure
+    - ✅ **Support new API features** as they become available by checking updated documentation
+    - ❌ **NEVER use deprecated endpoints or fields** - stick to current API version
+    
+    **The goal is to be fully compatible with the official Todoist REST API v2 as documented, including future updates and new features that may be added.**
+
     Instructions:
 
     - Parse each section and extract the list of objects it contains.
@@ -69,46 +96,43 @@ export const parseTaskPrompt = (
   - optionally \`section_id\` if the task should go inside a specific section
   ---
   
-  ### Language handling:
-  - Detect the language of the user instruction automatically.
-  - **Create all task contents, section names, and project names in the same language as the user input.**
-  - Normalize grammar and spelling within that language.
-  - Always convert relative or absolute time expressions from the user's input language into English for the \`due_string\`.
-  - Always calculate and convert the corresponding \`due_date\` into ISO 8601 UTC format based on the **current system time above**.
-  - Always include a matching \`due_date\` in **UTC ISO 8601 format** calculated from the CURRENT SYSTEM TIME above.
-  - **CRITICAL**: Calculate dates dynamically from the current UTC time provided above:
-  - \`due_string\`: Must always be in **natural English** (e.g., "tomorrow at 9:00 AM")
-  - \`due_date\`: Must always be in **ISO 8601 UTC timestamp**, converted from the user’s **local meaning** of the time
-  - Never leave relative or ambiguous terms in \`due_string\` (e.g., "at 9" ❌)
-  - Never send local timestamps without time zone — Todoist expects UTC in \`due_date\`
-  - Add the appropriate time offset (1 day for "tomorrow", 2 hours for "in 2 hours", etc.)
-  - Format as ISO 8601 UTC (e.g., "2025-08-02T09:00:00Z")
-  - ⚠️ Never leave any non-English text in \`due_string\`. Todoist only supports English there.
-  - ⚠️ Do not use hardcoded or placeholder dates. All dates must be dynamically calculated based on current time.
-  - Let Todoist interpret the UTC \`due_date\` according to the user's account time zone.
+  ### 🌍 CRITICAL LANGUAGE HANDLING RULES:
   
-  ---
+  **MOST IMPORTANT: All user-visible content must remain in the original language of the user's instruction.**
   
-  ### Output requirements:
+  #### What MUST stay in the original language:
+  - **Task names/content** (\`content\` field)
+  - **Task descriptions** (\`description\` field)
+  - **Project names** (\`name\` field for projects)
+  - **Section names** (\`name\` field for sections)
+  - **Label names** (if creating labels)
+  - **Comment text** (if creating comments)
+  - **Any text that the user will see in the Todoist application interface**
   
-  - Output a **valid JSON array** of objects representing Todoist API calls.
-  - Each object must include:
-    - \`id\`: descriptive string identifier (e.g., \`project1\`, \`task1\`) for references
-    - \`endpoint\`: one of "projects", "sections", or "tasks"
-    - \`method\`: HTTP method like "POST"
-    - \`body\`: JSON payload matching Todoist REST API v2 spec
-    - Optional \`depends_on\`: string or array of strings referencing previous \`id\`s
+  #### What MUST be in English:
+  - **Only** the \`due_string\` field (Todoist API requirement)
+  - **Only** internal API field names and structure
   
-  Use placeholders like \`{project1.id}\` or \`{section2.id}\` for references.
-  - Always include **both**:
-    - \`due_string\`: natural English expression (e.g., "in 2 days at 10:00 AM")
-    - \`due_date\`: precise ISO 8601 UTC timestamp calculated from current system time
-  - Always include **priority** levels (1=normal, 2=high, 3=higher, 4=urgent) based on task importance.
-  - Always include detailed **descriptions** for complex tasks explaining what exactly needs to be done.
-  - Avoid duplications unless logically necessary.
-  - Use dependencies to reflect task order when needed.
-  - Include tasks related to budgeting, communications, research, bookings, purchases, and follow-ups when relevant.
-  - \`due_date\` must match the meaning of \`due_string\` exactly, after local-to-UTC conversion.
+  #### Language Processing Steps:
+  1. **Detect the language** of the user instruction automatically
+  2. **Preserve that language** for ALL user-visible content
+  3. **Never translate** task names, descriptions, or project names to English
+  4. **Only translate time expressions** to English for the \`due_string\` field
+  5. **Calculate \`due_date\`** in UTC ISO 8601 format from the current system time
+  
+  #### Examples:
+  - User says in Hebrew: "תוסיף משימה למרוח קרם פיגמנטציה מחר בשעה 8 בערב"
+  - ✅ Task content: "מרוח קרם פיגמנטציה" (Hebrew)
+  - ✅ Task description: "מריחת קרם לטיפול בפיגמנטציה על הפנים" (Hebrew)
+  - ✅ due_string: "tomorrow at 8:00 PM" (English only)
+  - ✅ due_date: "2025-08-04T17:00:00Z" (UTC calculation)
+  
+  - User says in Spanish: "agregar tarea para llamar al médico mañana"
+  - ✅ Task content: "llamar al médico" (Spanish)
+  - ✅ due_string: "tomorrow" (English only)
+  
+  **⚠️ NEVER translate user content to English unless it's specifically the due_string field.**
+  **⚠️ Keep the original language's grammar, spelling, and cultural context intact.**
   
   ---
   
@@ -125,7 +149,7 @@ export const parseTaskPrompt = (
   - What research and decisions need to be made?
   
   **STEP 2: Universal Project Breakdown Pattern**
-  For ANY project type, always create these section types:
+  For ANY project type, always create these section types (IN THE USER'S LANGUAGE):
   1. **"Research & Planning"** - Information gathering, options analysis, decision making
   2. **"Legal/Administrative"** - Permits, registrations, official requirements, documentation
   3. **"Budget & Resources"** - Cost research, budget planning, resource acquisition
@@ -135,7 +159,7 @@ export const parseTaskPrompt = (
   7. **"Completion & Follow-up"** - Final steps, cleanup, documentation, celebration
   
   **STEP 3: Task Generation Logic**
-  For each section, create tasks following this pattern:
+  For each section, create tasks following this pattern (IN THE USER'S LANGUAGE):
   - **Research tasks**: "Research [specific options/requirements/costs]"
   - **Decision tasks**: "Choose/Select [specific choice with criteria]" 
   - **Action tasks**: "Book/Buy/Schedule/Order [specific item with details]"
@@ -144,7 +168,7 @@ export const parseTaskPrompt = (
   - **Backup tasks**: "Prepare backup plan for [specific risk]"
   
   **STEP 4: Smart Task Details**
-  Every task should include:
+  Every task should include (IN THE USER'S LANGUAGE):
   - Specific what, where, when, who details
   - Realistic time estimates and deadlines
   - Dependencies on other tasks
@@ -188,6 +212,7 @@ export const parseTaskPrompt = (
   - Use realistic current year dates (2025) rather than placeholder years like 2023.
   - ⚠️ Never leave relative expressions in \`due_string\` like "at 10:00" — always make them full English expressions like "tomorrow at 10:00 AM".
   - ⚠️ Always ensure \`due_date\` matches \`due_string\` after converting from local time to UTC.
+  - ⚠️ **REMEMBER: All task content, descriptions, project names, and section names must be in the user's original language**
   
   ---
   
@@ -203,6 +228,9 @@ export const parseTaskPrompt = (
   - The output **must start with \`[\` and end with \`]\`**.
   - ❌ Do NOT use placeholder dates like "2023-01-01" — use realistic future dates calculated from current system time.
   - ✅ Include comprehensive task descriptions and appropriate priority levels.
+  - ✅ **Ensure all user-visible content (task names, descriptions, project names) is in the original language of the user's instruction**
+  - ✅ **VERIFY: Every endpoint, method, and field name must exist in the official Todoist REST API v2 documentation**
+  - ❌ **NEVER use invented API commands, endpoints, or field names - always check documentation first**
   
   ---
   
