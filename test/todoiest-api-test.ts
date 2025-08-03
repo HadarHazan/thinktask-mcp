@@ -38,7 +38,6 @@ async function bootstrap() {
 
     // Archive / delete
     { instruction: 'Delete the task about buying the book' },
-    { instruction: 'Remove the task about calling Adi' },
     {
       instruction:
         'Delete the task about a meeting with Ella and tag it as urgent',

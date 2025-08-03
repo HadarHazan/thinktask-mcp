@@ -10,20 +10,17 @@ async function bootstrap() {
   const aiService = app.get(AiService);
   const tasksService = app.get(TasksService);
 
-  const userInstruction = 'תסמן שהמשימה לנקות את האסלה בוצעה ';
+  // const userInstruction = 'תסמן שהמשימה לנקות את הבריטה בוצעה ';
   // const userInstruction = 'תמחק את הפרויקט מעבר דירה';
   // const userInstruction =
   //   'תוסיף לי משימה יומית לפרוקיט של טיפוח למרוח קרם הגנה כל בוקר';
   // const userInstruction =
   //   'Doctor appointment tomorrow at 10 AM, remind me in 1 hour to prepare, and schedule follow-up in 2 weeks at 4 PM';
-  // ' moving on the 15th of the month – help me plan everything';
-  // 'תפתח לי משימה למחר להתקשר לטלי ב-6:00 בבוקר בוא נראה אם האפליקציה שלי עובדת';
+  // (' moving on the 15th of the month – help me plan everything');
   // const userInstruction =
   //   'אני צריך שתפתח לי פרויקט לעשות מטבח ליוסי לעוד חודש אני צריך ללכת לקחת לו מדידות אני צריך להזמין חומרים אני צריך לעשות הדמיה את ההדמיה אני צריך לעשות כמה זמן לפני שבוע נגיד לפני שכבר יהיה הדמיה ואז ללכת ולהקים לו את המטבח';
-  // const userInstruction =
-  //   'מחר אני צריכה לנקות את המטבח יסודי יש ארונות יש יש כיור יש מקרר שצריך לנקות יסודי ותנור ומיקרוגל';
-  // const userInstruction = 'תעשה לי סימן שאתה עובד';
-  // 'אני צריכה שתזכיר לי מחר ב-19:00 בבוקר להזמין לחפש קוסמטיקאית שתעשה לי אפילציה';
+  const userInstruction =
+    'מחר אני צריכה לנקות את המטבח יסודי יש ארונות יש יש כיור יש מקרר שצריך לנקות יסודי ותנור ומיקרוגל';
   // const userInstruction = 'תפתח לי משימה למחר לנקות את הסלון';
   //  const userInstruction =
   //   'אני רוצה לתכנן טיול לשלושה ימים לאיטליה לי ולחברה שלי לרומא תפתח לי פרויקט תעזור לי לארגן את הטיו

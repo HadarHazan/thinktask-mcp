@@ -110,7 +110,6 @@ export class AiService {
     const jsonString = match ? match[1] : raw.trim();
 
     try {
-      debugger;
       const parsed = JSON.parse(jsonString) as unknown;
 
       if (!Array.isArray(parsed)) {
