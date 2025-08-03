@@ -2,14 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { determineRequiredPrompt } from './determineRequiredPrompt';
 import { parseTaskPrompt } from './parseTaskPrompt';
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
+import { TodoistActionDto } from 'src/dto/mcp.dto';
 
 @Injectable()
 export class AiService {
@@ -62,7 +55,7 @@ export class AiService {
     text: string,
     preparsionData: string,
     anthropic_api_key: string,
-  ): Promise<TodoistAction[]> {
+  ): Promise<TodoistActionDto[]> {
     if (!text?.trim()) {
       throw new Error('Input text must be a non-empty string');
     }
@@ -103,7 +96,7 @@ export class AiService {
     }
   }
 
-  private extractJsonFromText(raw: string): TodoistAction[] {
+  private extractJsonFromText(raw: string): TodoistActionDto[] {
     // Try to find JSON wrapped in code blocks first
     const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
     const match = raw.match(jsonRegex);
@@ -117,7 +110,7 @@ export class AiService {
       }
 
       // Validate each action has required properties
-      const actions: TodoistAction[] = parsed.map((item, index) => {
+      const actions: TodoistActionDto[] = parsed.map((item, index) => {
         if (typeof item !== 'object' || item === null) {
           throw new Error(`Action at index ${index} is not an object`);
         }

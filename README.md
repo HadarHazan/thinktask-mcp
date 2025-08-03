@@ -40,9 +40,10 @@ To use ThinkTask as an MCP tool in Claude Desktop, add the following to your `mc
   "mcpServers": {
     "thinktask": {
       "command": "npx",
-      "args": ["thinktask-mcp-agent"],
+      "args": ["-y", "thinktask-mcp@latest"],
       "env": {
-        "TODOIST_API_TOKEN": "your_todoist_api_token"
+        "TODOIST_API_TOKEN": "your_todoist_api_token",
+        "ANTHROPIC_API_KEY": "your_anthropic_api_key"
       }
     }
   }
@@ -55,11 +56,6 @@ To use ThinkTask as an MCP tool in Claude Desktop, add the following to your `mc
 - A valid **Todoist API token** (found in your Todoist Integrations settings)
 - **No manual installation needed** – `npx` will automatically download and run the latest version from npm
 
-### 🔑 Environment Variables
-
-- `TODOIST_API_TOKEN`: required to authenticate with Todoist
-- Optionally, you may set `ANTHROPIC_API_KEY` in your environment for Claude AI features
-
 ---
 
 Once added, Claude Desktop will be able to call ThinkTask as a tool and return structured tasks directly to Todoist.
@@ -71,40 +67,6 @@ Once added, Claude Desktop will be able to call ThinkTask as a tool and return s
 - **POST** `/api/mcp/call-tool` - Execute planning tool
 - **GET** `/api/mcp/health` - Health check
 
-## 🛠️ MCP Tool: `plan_intelligent_tasks`
-
-Transform natural language into comprehensive Todoist structures.
-
-### Parameters:
-
-- `instruction` (required): What you want to accomplish
-- `todoist_api_key` (required): Your Todoist API key
-- `anthropic_api_key` (optional): Claude API key if not set in environment
-
-### Examples:
-
-#### Simple Task
-
-```json
-{
-  "name": "plan_intelligent_tasks",
-  "arguments": {
-    "instruction": "Call mom tomorrow at 2pm",
-    "todoist_api_key": "your_todoist_key"
-  }
-}
-```
-
-#### Complex Project
-
-```json
-{
-  "name": "plan_intelligent_tasks",
-  "arguments": {
-    "instruction": "Plan my wedding for May 15 - I need to organize everything from venue to catering",
-    "todoist_api_key": "your_todoist_key"
-  }
-}
 ```
 
 ## 🧪 Example Use Cases
@@ -118,22 +80,19 @@ Transform natural language into comprehensive Todoist structures.
 
 ```
 
-```
-
 ## 🏗️ Architecture
 
-ThinkTask MCP Service
-├── 🤖 AI Service (Claude 3.5 Sonnet)
-│ └── Natural language → Structured JSON
-├── 📋 Tasks Service (Todoist API)
-│ └── Execute API calls with dependency resolution
-├── 🔧 MCP Service
-│ └── Handle MCP protocol and tool calls
+src/
+├── config/ # Configuration and validation
+├── controllers/ # HTTP controllers
+├── services/ # Business logic
+│ └── 🤖 AI Service Natural language → Structured JSON
+│ └── 📋 Tasks Service (Todoist API) → Execute API calls with dependency resolution
+│ └── 🔧 MCP Service → Handle MCP protocol and tool calls
 └── 🌐 REST API
-└── HTTP endpoints for direct access
-
-```
-
-```
+├── types/ # TypeScript type definitions
+├── utils/ # Utility functions
+├── exceptions/ # Custom error classes
+└── **tests**/ # Test files
 
 **Made with ❤️ for productivity enthusiasts who believe AI should think, not just automate.**

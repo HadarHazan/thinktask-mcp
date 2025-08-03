@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { McpController } from './mcp.controller';
-import { McpService, McpToolCall } from '../services/mcp.service';
+import { McpService } from '../services/mcp.service';
+import { McpToolCallDto } from 'src/dto/mcp.dto';
 
 describe('McpController', () => {
   let controller: McpController;
@@ -43,7 +44,7 @@ describe('McpController', () => {
 
   describe('callTool', () => {
     it('should call handleToolCall and return result', async () => {
-      const request: McpToolCall = {
+      const request: McpToolCallDto = {
         name: 'tool1',
         arguments: {
           instruction: 'Please do something important',
@@ -64,7 +65,7 @@ describe('McpController', () => {
         new Error('Boom!'),
       );
 
-      const request: McpToolCall = {
+      const request: McpToolCallDto = {
         name: 'badTool',
         arguments: {
           instruction: 'fail please',

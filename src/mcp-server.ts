@@ -12,6 +12,7 @@ import { TasksService } from './services/tasks.service.js';
 import { McpService } from './services/mcp.service.js';
 import { HttpService } from '@nestjs/axios';
 import { Logger } from '@nestjs/common';
+import { PlanTasksDto } from './dto/mcp.dto.js';
 
 // Patch NestJS logger to use stderr only
 Logger.overrideLogger({
@@ -21,11 +22,6 @@ Logger.overrideLogger({
   debug: (...args: any[]) => {},
   verbose: (...args: any[]) => {},
 });
-
-interface ToolArguments {
-  instruction: string;
-  todoist_api_key: string;
-}
 
 // Create services instances
 const httpService = new HttpService();
@@ -61,7 +57,7 @@ server.setRequestHandler(
         throw new Error('Invalid arguments provided');
       }
 
-      const toolArgs = args as unknown as ToolArguments;
+      const toolArgs = args as unknown as PlanTasksDto;
 
       // Validate required fields
       if (!toolArgs.instruction || typeof toolArgs.instruction !== 'string') {

@@ -2,7 +2,8 @@
 import * as readline from 'readline';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../src/app.module';
-import { McpService, McpToolCall } from '../../src/services/mcp.service';
+import { McpService } from '../../src/services/mcp.service';
+import { McpToolCallDto } from '../../src/dto/mcp.dto';
 
 async function main() {
   const app = await NestFactory.createApplicationContext(AppModule, {
@@ -42,7 +43,7 @@ async function main() {
           JSON.stringify({ jsonrpc: '2.0', id: message.id, result }) + '\n',
         );
       } else if (message.method === 'callTool') {
-        const params: McpToolCall = message.params;
+        const params: McpToolCallDto = message.params;
         const result = await mcpService.handleToolCall(params);
         process.stdout.write(
           JSON.stringify({ jsonrpc: '2.0', id: message.id, result }) + '\n',

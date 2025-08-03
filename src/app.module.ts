@@ -7,6 +7,8 @@ import { McpController } from './controllers/mcp.controller';
 import { AiService } from './services/ai.service';
 import { TasksService } from './services/tasks.service';
 import { McpService } from './services/mcp.service';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 @Module({
   imports: [
@@ -18,6 +20,15 @@ import { McpService } from './services/mcp.service';
     }),
   ],
   controllers: [AppController, McpController],
-  providers: [AppService, AiService, TasksService, McpService],
+  providers: [
+    AppService,
+    AiService,
+    TasksService,
+    McpService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}

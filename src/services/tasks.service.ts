@@ -2,22 +2,9 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import { ActionExecutionResultDto, TodoistActionDto } from 'src/dto/mcp.dto';
 
 const TODOIST_API_URL = 'https://api.todoist.com/rest/v2';
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
-
-interface ActionExecutionResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
 
 @Injectable()
 export class TasksService {
@@ -55,10 +42,10 @@ export class TasksService {
   }
 
   async executeActions(
-    actions: TodoistAction[],
+    actions: TodoistActionDto[],
     apiKey: string,
-  ): Promise<Map<string, ActionExecutionResult>> {
-    const results = new Map<string, ActionExecutionResult>();
+  ): Promise<Map<string, ActionExecutionResultDto>> {
+    const results = new Map<string, ActionExecutionResultDto>();
 
     for (const action of actions) {
       try {
@@ -85,9 +72,9 @@ export class TasksService {
   }
 
   private async executeAction(
-    action: TodoistAction,
+    action: TodoistActionDto,
     apiKey: string,
-    previousResults: Map<string, ActionExecutionResult>,
+    previousResults: Map<string, ActionExecutionResultDto>,
   ): Promise<unknown> {
     const url = `${TODOIST_API_URL}/${action.endpoint}`;
     const method = action.method.toLowerCase();
@@ -115,7 +102,7 @@ export class TasksService {
 
   private resolvePlaceholders(
     obj: Record<string, unknown>,
-    results: Map<string, ActionExecutionResult>,
+    results: Map<string, ActionExecutionResultDto>,
   ): Record<string, unknown> {
     const resolved: Record<string, unknown> = {};
 
@@ -128,7 +115,7 @@ export class TasksService {
 
   private resolveValue(
     value: unknown,
-    results: Map<string, ActionExecutionResult>,
+    results: Map<string, ActionExecutionResultDto>,
   ): unknown {
     if (typeof value === 'string') {
       return value.replace(/\{([^}]+)\}/g, (_, key: string) => {

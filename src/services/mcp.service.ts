@@ -1,34 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { TasksService } from './tasks.service';
-import { PlanTasksDto } from 'src/dto/mcp.dto';
-
-export interface McpToolCall {
-  name: string;
-  arguments: PlanTasksDto;
-}
-
-export interface McpToolResult {
-  content: Array<{
-    type: 'text';
-    text: string;
-  }>;
-  isError?: boolean;
-}
-
-interface ActionExecutionResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
+import {
+  ActionExecutionResultDto,
+  McpToolCallDto,
+  McpToolResultDto,
+  PlanTasksDto,
+  TodoistActionDto,
+} from 'src/dto/mcp.dto';
 
 @Injectable()
 export class McpService {
@@ -39,7 +18,7 @@ export class McpService {
     private readonly tasksService: TasksService,
   ) {}
 
-  async handleToolCall(toolCall: McpToolCall): Promise<McpToolResult> {
+  async handleToolCall(toolCall: McpToolCallDto): Promise<McpToolResultDto> {
     try {
       switch (toolCall.name) {
         case 'plan_intelligent_tasks':
@@ -66,7 +45,7 @@ export class McpService {
 
   private async planIntelligentTasks(
     args: PlanTasksDto,
-  ): Promise<McpToolResult> {
+  ): Promise<McpToolResultDto> {
     const { instruction } = args;
     const todoist_api_key =
       args.todoist_api_key || process.env.TODOIST_API_TOKEN;
@@ -167,8 +146,8 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
   }
 
   private formatCreatedItems(
-    results: Map<string, ActionExecutionResult>,
-    actions: TodoistAction[],
+    results: Map<string, ActionExecutionResultDto>,
+    actions: TodoistActionDto[],
   ): string {
     const items: string[] = [];
 
@@ -217,8 +196,8 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
   }
 
   private generateSummary(
-    actions: TodoistAction[],
-    results: Map<string, ActionExecutionResult>,
+    actions: TodoistActionDto[],
+    results: Map<string, ActionExecutionResultDto>,
   ): string {
     const counts = {
       projects: 0,

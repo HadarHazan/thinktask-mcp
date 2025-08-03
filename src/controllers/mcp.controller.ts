@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Controller, Post, Body, Get, Logger } from '@nestjs/common';
-import {
-  McpService,
-  McpToolCall,
-  McpToolResult,
-} from '../services/mcp.service';
+import { McpService } from '../services/mcp.service';
+import { McpToolCallDto, McpToolResultDto } from '../dto/mcp.dto';
 
 @Controller('api/mcp')
 export class McpController {
@@ -20,7 +17,7 @@ export class McpController {
   }
 
   @Post('call-tool')
-  async callTool(@Body() request: McpToolCall): Promise<McpToolResult> {
+  async callTool(@Body() request: McpToolCallDto): Promise<McpToolResultDto> {
     this.logger.log(`🔧 Tool called: ${request.name}`);
 
     try {
@@ -42,16 +39,6 @@ export class McpController {
         isError: true,
       };
     }
-  }
-
-  @Get('health')
-  health() {
-    return {
-      status: 'healthy',
-      service: 'ThinkTask MCP Service',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-    };
   }
 
   @Get('')
