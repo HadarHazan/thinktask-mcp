@@ -11,6 +11,16 @@ import { AiService } from './services/ai.service.js';
 import { TasksService } from './services/tasks.service.js';
 import { McpService } from './services/mcp.service.js';
 import { HttpService } from '@nestjs/axios';
+import { Logger } from '@nestjs/common';
+
+// Patch NestJS logger to use stderr only
+Logger.overrideLogger({
+  log: (...args: any[]) => console.error(...args),
+  error: (...args: any[]) => console.error(...args),
+  warn: (...args: any[]) => console.error(...args),
+  debug: (...args: any[]) => {},
+  verbose: (...args: any[]) => {},
+});
 
 interface ToolArguments {
   instruction: string;
@@ -57,15 +67,6 @@ server.setRequestHandler(
       if (!toolArgs.instruction || typeof toolArgs.instruction !== 'string') {
         throw new Error(
           'instruction parameter is required and must be a string',
-        );
-      }
-
-      if (
-        !toolArgs.todoist_api_key ||
-        typeof toolArgs.todoist_api_key !== 'string'
-      ) {
-        throw new Error(
-          'todoist_api_key parameter is required and must be a string',
         );
       }
 

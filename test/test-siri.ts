@@ -10,10 +10,14 @@ async function bootstrap() {
   const aiService = app.get(AiService);
   const tasksService = app.get(TasksService);
 
+  const userInstruction = 'תסמן שהמשימה לנקות את האסלה בוצעה ';
+  // const userInstruction = 'תמחק את הפרויקט מעבר דירה';
   // const userInstruction =
   //   'תוסיף לי משימה יומית לפרוקיט של טיפוח למרוח קרם הגנה כל בוקר';
-  const userInstruction =
-    'תפתח לי משימה למחר להתקשר לטלי ב-6:00 בבוקר בוא נראה אם האפליקציה שלי עובדת';
+  // const userInstruction =
+  //   'Doctor appointment tomorrow at 10 AM, remind me in 1 hour to prepare, and schedule follow-up in 2 weeks at 4 PM';
+  // ' moving on the 15th of the month – help me plan everything';
+  // 'תפתח לי משימה למחר להתקשר לטלי ב-6:00 בבוקר בוא נראה אם האפליקציה שלי עובדת';
   // const userInstruction =
   //   'אני צריך שתפתח לי פרויקט לעשות מטבח ליוסי לעוד חודש אני צריך ללכת לקחת לו מדידות אני צריך להזמין חומרים אני צריך לעשות הדמיה את ההדמיה אני צריך לעשות כמה זמן לפני שבוע נגיד לפני שכבר יהיה הדמיה ואז ללכת ולהקים לו את המטבח';
   // const userInstruction =
@@ -23,24 +27,27 @@ async function bootstrap() {
   // const userInstruction = 'תפתח לי משימה למחר לנקות את הסלון';
   //  const userInstruction =
   //   'אני רוצה לתכנן טיול לשלושה ימים לאיטליה לי ולחברה שלי לרומא תפתח לי פרויקט תעזור לי לארגן את הטיו
-
   // const userInstruction =
   //   'תבנה לי פרויקט למעבר דירה שמתרחש עוד שלושה שבועות וצריך להכין תוכנית מסודרת לאריזה ולקראת מעבר לדירה של שלושה חדרי שינה מטבח ושירותים מקלחת וסלון';
   try {
-    debugger;
-    const projectsList = await tasksService.fetchAllProjects(
-      '0874c7d2fab96d9777b8ec0feae7c79ecd347fa0',
+    const todoist_api_key = process.env.TODOIST_API_TOKEN;
+    const anthropic_api_key = process.env.ANTHROPIC_API_KEY;
+    const endpoints = await aiService.determineRequiredFetches(
+      userInstruction,
+      anthropic_api_key,
     );
-    const sectionsList = await tasksService.fetchAllSections(
-      '0874c7d2fab96d9777b8ec0feae7c79ecd347fa0',
+    console.log('⚡ Executing Todoist API endpointa...');
+    const preparsionData = await tasksService.executeEndpoints(
+      endpoints,
+      todoist_api_key,
     );
-    console.log('Projects List:', JSON.stringify(projectsList, null, 2));
-    console.log('Sections List:', JSON.stringify(sectionsList, null, 2));
+
+    console.log('preparsionData', JSON.stringify(preparsionData, null, 2));
     console.log('Parsing user instruction...');
     const actions = await aiService.parseTask(
       userInstruction,
-      projectsList,
-      sectionsList,
+      preparsionData,
+      anthropic_api_key,
     );
     console.log('AI generated actions:', JSON.stringify(actions, null, 2));
 

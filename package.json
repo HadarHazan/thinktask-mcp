@@ -1,10 +1,17 @@
 {
   "name": "thinktask-mcp",
-  "version": "1.0.0",
+  "version": "1.0.11",
   "description": "ThinkTask: Intelligent Todoist MCP Service - Transform natural language into perfect Todoist structure",
   "author": "Your Name",
-  "private": true,
   "license": "MIT",
+  "bin": {
+    "thinktask-mcp-server": "./mcp-server.js"
+  },
+  "main": "dist/mcp-server.js",
+  "files": [
+    "dist/",
+    "mcp-server.js"
+  ],
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

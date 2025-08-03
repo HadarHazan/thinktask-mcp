@@ -1,13 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { TasksService } from './tasks.service';
+import { PlanTasksDto } from 'src/dto/mcp.dto';
 
 export interface McpToolCall {
   name: string;
-  arguments: {
-    instruction: string;
-    todoist_api_key: string;
-  };
+  arguments: PlanTasksDto;
 }
 
 export interface McpToolResult {
@@ -66,11 +64,14 @@ export class McpService {
     }
   }
 
-  private async planIntelligentTasks(args: {
-    instruction: string;
-    todoist_api_key: string;
-  }): Promise<McpToolResult> {
-    const { instruction, todoist_api_key } = args;
+  private async planIntelligentTasks(
+    args: PlanTasksDto,
+  ): Promise<McpToolResult> {
+    const { instruction } = args;
+    const todoist_api_key =
+      args.todoist_api_key || process.env.TODOIST_API_TOKEN;
+    const anthropic_api_key =
+      args.anthropic_api_key || process.env.ANTHROPIC_API_KEY;
 
     // Validate required parameters
     if (!instruction?.trim()) {
@@ -78,7 +79,27 @@ export class McpService {
     }
 
     if (!todoist_api_key?.trim()) {
-      throw new Error('Todoist API key is required');
+      return {
+        content: [
+          {
+            type: 'text',
+            text: '⚠️ No Todoist API key provided. Please provide a todoist_api_key in the request or set the TODOIST_API_TOKEN environment variable if you want to use Todoist features.',
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    if (!anthropic_api_key?.trim()) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: '⚠️ No ANTHROPIC Claude API key provided. Please provide a anthropic_api_key in the request or set the ANTHROPIC_API_KEY environment variable if you want to use claude ai features.',
+          },
+        ],
+        isError: true,
+      };
     }
 
     // Validate Todoist API key
@@ -89,19 +110,22 @@ export class McpService {
     }
 
     try {
-      // Fetch existing projects and sections
-      this.logger.log('📥 Fetching existing Todoist data...');
-      const [projectsList, sectionsList] = await Promise.all([
-        this.tasksService.fetchAllProjects(todoist_api_key),
-        this.tasksService.fetchAllSections(todoist_api_key),
-      ]);
+      const endpoints = await this.aiService.determineRequiredFetches(
+        instruction,
+        anthropic_api_key,
+      );
+      this.logger.log('⚡ Executing Todoist API endpointa...');
+      const preparsionData = await this.tasksService.executeEndpoints(
+        endpoints,
+        todoist_api_key,
+      );
 
       // Parse the instruction with AI
       this.logger.log('🤖 Processing instruction with Claude...');
       const actions = await this.aiService.parseTask(
         instruction,
-        sectionsList,
-        projectsList,
+        preparsionData,
+        anthropic_api_key,
       );
 
       this.logger.log(`📋 Generated ${actions.length} actions to execute`);
@@ -153,7 +177,28 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
       if (result?.success && result.data) {
         const emoji = this.getEmojiForEndpoint(action.endpoint);
         const name = this.extractNameFromResult(result.data) || 'Unnamed item';
-        items.push(`${emoji} **${name}**`);
+
+        let dueDate = '';
+        let dueString = '';
+        if (action.body) {
+          dueDate = (action.body as any).due_date || '';
+          dueString = (action.body as any).due_string || '';
+        }
+        // Optionally, try to get from result.data if available
+        if (result.data && typeof result.data === 'object') {
+          const data = result.data as any;
+          if (data.due) {
+            dueDate = data.due.date || dueDate;
+            dueString = data.due.string || dueString;
+          }
+        }
+
+        let dateInfo = '';
+        if (dueDate || dueString) {
+          dateInfo = ` (Due: ${dueString}${dueDate ? ` | ${dueDate}` : ''})`;
+        }
+
+        items.push(`${emoji} **${name}**${dateInfo}`);
       }
     });
 
@@ -250,10 +295,10 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
             todoist_api_key: {
               type: 'string',
               description:
-                'Your Todoist API key (required). Get it from Todoist Settings > Integrations > API token',
+                'Your Todoist API key (optional). If not provided, the service will use the TODOIST_API_TOKEN environment variable.',
             },
           },
-          required: ['instruction', 'todoist_api_key'],
+          required: ['instruction'],
         },
       },
     ];

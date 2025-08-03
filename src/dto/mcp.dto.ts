@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class PlanTasksDto {
@@ -7,7 +6,7 @@ export class PlanTasksDto {
   instruction: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   todoist_api_key: string;
 
   @IsString()

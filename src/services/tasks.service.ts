@@ -1,33 +1,9 @@
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
 
 const TODOIST_API_URL = 'https://api.todoist.com/rest/v2';
-
-interface TodoistProject {
-  id: string;
-  name: string;
-  comment_count?: number;
-  order?: number;
-  color?: string;
-  is_shared?: boolean;
-  is_favorite?: boolean;
-  is_inbox_project?: boolean;
-  is_team_inbox?: boolean;
-  view_style?: string;
-  url?: string;
-  parent_id?: string;
-}
-
-interface TodoistSection {
-  id: string;
-  project_id: string;
-  order: number;
-  name: string;
-}
 
 interface TodoistAction {
   id: string;
@@ -49,36 +25,33 @@ export class TasksService {
 
   constructor(private readonly httpService: HttpService) {}
 
-  async fetchAllProjects(apiKey: string): Promise<string> {
-    try {
-      const response: AxiosResponse<TodoistProject[]> = await firstValueFrom(
-        this.httpService.get(`${TODOIST_API_URL}/projects`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        }),
-      );
-      return JSON.stringify(response.data);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('Failed to fetch projects:', errorMessage);
-      throw new Error(`Failed to fetch projects: ${errorMessage}`);
-    }
-  }
+  async executeEndpoints(endpoints: string[], apiKey: string): Promise<string> {
+    const resultParts: string[] = [];
 
-  async fetchAllSections(apiKey: string): Promise<string> {
-    try {
-      const response: AxiosResponse<TodoistSection[]> = await firstValueFrom(
-        this.httpService.get(`${TODOIST_API_URL}/sections`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        }),
-      );
-      return JSON.stringify(response.data);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('Failed to fetch sections:', errorMessage);
-      throw new Error(`Failed to fetch sections: ${errorMessage}`);
-    }
+    await Promise.all(
+      endpoints.map(async (endpoint) => {
+        try {
+          const url = `${TODOIST_API_URL}${endpoint}`;
+
+          const response = await firstValueFrom(
+            this.httpService.get(url, {
+              headers: { Authorization: `Bearer ${apiKey}` },
+            }),
+          );
+
+          const data = response.data;
+
+          // Format as text for the AI prompt
+          const formatted = `Existing ${endpoint}:\n\n"""${JSON.stringify(data, null, 2)}"""\n`;
+          resultParts.push(formatted);
+        } catch (error) {
+          // Optional: log or handle the error per endpoint
+          console.warn(`❌ Failed to fetch ${endpoint}:`, error.message);
+        }
+      }),
+    );
+
+    return resultParts.join('\n');
   }
 
   async executeActions(
@@ -89,6 +62,10 @@ export class TasksService {
 
     for (const action of actions) {
       try {
+        this.logger.log(
+          `Row Action ${action.id}  is ${JSON.stringify(action)}`,
+        );
+
         const result = await this.executeAction(action, apiKey, results);
         results.set(action.id, { success: true, data: result });
         this.logger.log(`✅ Action ${action.id} completed successfully`);
@@ -115,8 +92,7 @@ export class TasksService {
     const url = `${TODOIST_API_URL}/${action.endpoint}`;
     const method = action.method.toLowerCase();
 
-    // Resolve placeholders in the body
-    const body = this.resolvePlaceholders(action.body, previousResults);
+    const body = this.resolvePlaceholders(action.body ?? {}, previousResults);
 
     const requestConfig = {
       url,
@@ -125,7 +101,9 @@ export class TasksService {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      ...(method === 'get' ? { params: body } : { data: body }),
+      ...(['get', 'delete'].includes(method)
+        ? { params: body }
+        : { data: body }),
     };
 
     const response: AxiosResponse<unknown> = await firstValueFrom(
