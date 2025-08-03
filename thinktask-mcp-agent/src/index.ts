@@ -105,7 +105,7 @@ async function main() {
         JSON.stringify({
           jsonrpc: '2.0',
           id: message.id,
-          error: { code: -32000, message: err?.message || 'Internal error' },
+          error: { code: -32000, message: 'Internal error' },
         }) + '\n',
       );
     }
