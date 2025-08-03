@@ -1,6 +1,6 @@
 {
   "name": "thinktask-mcp",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "ThinkTask: Intelligent Todoist MCP Service - Transform natural language into perfect Todoist structure",
   "author": "Hadar Hazan",
   "license": "MIT",
@@ -13,7 +13,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "nest build",
+    "build": "rm -rf dist && tsc && chmod +x dist/mcp-server.js",
+    "build:nest": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
