@@ -40,9 +40,10 @@ To use ThinkTask as an MCP tool in Claude Desktop, add the following to your `mc
   "mcpServers": {
     "thinktask": {
       "command": "npx",
-      "args": ["thinktask-mcp-agent"],
+      "args": ["-y", "thinktask-mcp@latest"],
       "env": {
-        "TODOIST_API_TOKEN": "your_todoist_api_token"
+        "TODOIST_API_TOKEN": "your_todoist_api_token",
+        "ANTHROPIC_API_KEY": "your_anthropic_api_key"
       }
     }
   }
