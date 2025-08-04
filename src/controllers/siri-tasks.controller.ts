@@ -14,7 +14,7 @@ export class SiriTasksController {
       anthropic_api_key?: string;
     },
   ) {
-    const task = await this.mcpService.handleToolCall({
+    const result = await this.mcpService.handleToolCall({
       name: 'plan_intelligent_tasks',
       arguments: {
         instruction: body.text,
@@ -22,8 +22,6 @@ export class SiriTasksController {
         anthropic_api_key: body.anthropic_api_key || 'anthropic_api_key',
       },
     });
-    return {
-      message: task,
-    };
+    return result.content;
   }
 }

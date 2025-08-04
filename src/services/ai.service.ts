@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
-import { determineRequiredPrompt } from './determineRequiredPrompt.js';
-import { parseTaskPrompt } from './parseTaskPrompt.js';
+import { determineRequiredPrompt } from './determineRequiredPrompt';
+import { parseTaskPrompt } from './parseTaskPrompt';
 
 interface TodoistAction {
   id: string;

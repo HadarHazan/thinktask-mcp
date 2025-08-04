@@ -9,10 +9,7 @@ export interface McpToolCall {
 }
 
 export interface McpToolResult {
-  content: Array<{
-    type: 'text';
-    text: string;
-  }>;
+  content: string;
   isError?: boolean;
 }
 
@@ -42,8 +39,9 @@ export class McpService {
   async handleToolCall(toolCall: McpToolCall): Promise<McpToolResult> {
     try {
       switch (toolCall.name) {
-        case 'plan_intelligent_tasks':
+        case 'plan_intelligent_tasks': {
           return await this.planIntelligentTasks(toolCall.arguments);
+        }
         default:
           throw new Error(`Unknown tool: ${toolCall.name}`);
       }
@@ -53,12 +51,7 @@ export class McpService {
       this.logger.error(`Tool execution failed: ${errorMessage}`);
 
       return {
-        content: [
-          {
-            type: 'text',
-            text: `❌ Error: ${errorMessage}`,
-          },
-        ],
+        content: `❌ Error: ${errorMessage}`,
         isError: true,
       };
     }
@@ -80,24 +73,16 @@ export class McpService {
 
     if (!todoist_api_key?.trim()) {
       return {
-        content: [
-          {
-            type: 'text',
-            text: '⚠️ No Todoist API key provided. Please provide a todoist_api_key in the request or set the TODOIST_API_TOKEN environment variable if you want to use Todoist features.',
-          },
-        ],
+        content:
+          '⚠️ No Todoist API key provided. Please provide a todoist_api_key in the request or set the TODOIST_API_TOKEN environment variable if you want to use Todoist features.',
         isError: true,
       };
     }
 
     if (!anthropic_api_key?.trim()) {
       return {
-        content: [
-          {
-            type: 'text',
-            text: '⚠️ No ANTHROPIC Claude API key provided. Please provide a anthropic_api_key in the request or set the ANTHROPIC_API_KEY environment variable if you want to use claude ai features.',
-          },
-        ],
+        content:
+          '⚠️ No ANTHROPIC Claude API key provided. Please provide a anthropic_api_key in the request or set the ANTHROPIC_API_KEY environment variable if you want to use claude ai features.',
         isError: true,
       };
     }
@@ -142,21 +127,7 @@ export class McpService {
       const summary = this.generateSummary(actions, results);
 
       return {
-        content: [
-          {
-            type: 'text',
-            text: `✅ **ThinkTask Planning Complete!**
-
-${summary}
-
-**Created Items:**
-${createdItems}
-
-**Original Instruction:** "${instruction}"
-
-All tasks have been intelligently organized in your Todoist with proper scheduling, priorities, and dependencies. Your AI-powered planning assistant has transformed your natural language request into a structured, actionable plan! 🎯`,
-          },
-        ],
+        content: `✅ **Plan created successfully!** ${createdItems}`,
       };
     } catch (error) {
       const errorMessage =
@@ -178,31 +149,38 @@ All tasks have been intelligently organized in your Todoist with proper scheduli
         const emoji = this.getEmojiForEndpoint(action.endpoint);
         const name = this.extractNameFromResult(result.data) || 'Unnamed item';
 
-        let dueDate = '';
-        let dueString = '';
-        if (action.body) {
-          dueDate = (action.body as any).due_date || '';
-          dueString = (action.body as any).due_string || '';
-        }
-        // Optionally, try to get from result.data if available
-        if (result.data && typeof result.data === 'object') {
-          const data = result.data as any;
-          if (data.due) {
-            dueDate = data.due.date || dueDate;
-            dueString = data.due.string || dueString;
-          }
-        }
+        let dateInfo = this.getDateInfo(action, result.data);
 
-        let dateInfo = '';
-        if (dueDate || dueString) {
-          dateInfo = ` (Due: ${dueString}${dueDate ? ` | ${dueDate}` : ''})`;
-        }
-
-        items.push(`${emoji} **${name}**${dateInfo}`);
+        items.push(`${emoji} ${name}${dateInfo}`);
       }
     });
 
-    return items.length > 0 ? items.join('\n') : 'No items were created';
+    return items.length > 0 ? items.join('\n') : 'No items created';
+  }
+
+  private getDateInfo(action: TodoistAction, data: any): string {
+    let dueString = '';
+    let dueDate = '';
+
+    // Try to get from action body
+    if (action.body) {
+      dueString = (action.body as any).due_string || '';
+      dueDate = (action.body as any).due_date || '';
+    }
+
+    // Try to get from result data
+    if (data && typeof data === 'object' && data.due) {
+      dueString = data.due.string || dueString;
+      dueDate = data.due.date || dueDate;
+    }
+
+    if (dueString) {
+      return ` - ${dueString}`;
+    } else if (dueDate) {
+      return ` - ${dueDate}`;
+    }
+
+    return '';
   }
 
   private extractNameFromResult(data: unknown): string | null {

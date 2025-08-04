@@ -10,7 +10,7 @@ describe('McpController', () => {
   const mockService: Partial<Record<keyof McpService, jest.Mock>> = {
     getToolsDefinition: jest.fn(() => ['tool1', 'tool2']),
     handleToolCall: jest.fn().mockResolvedValue({
-      content: [{ type: 'text', text: 'Handled tool1' }],
+      content: 'Handled tool1',
     }),
   };
 
@@ -54,7 +54,7 @@ describe('McpController', () => {
       const result = await controller.callTool(request);
 
       expect(result).toEqual({
-        content: [{ type: 'text', text: 'Handled tool1' }],
+        content: 'Handled tool1',
       });
       expect(service.handleToolCall).toHaveBeenCalledWith(request);
     });
@@ -74,12 +74,7 @@ describe('McpController', () => {
 
       const result = await controller.callTool(request);
       expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: '❌ Tool execution failed: Boom!',
-          },
-        ],
+        content: '❌ Tool execution failed: Boom!',
         isError: true,
       });
     });

@@ -27,8 +27,8 @@ async function bootstrap() {
   // const userInstruction =
   //   'תבנה לי פרויקט למעבר דירה שמתרחש עוד שלושה שבועות וצריך להכין תוכנית מסודרת לאריזה ולקראת מעבר לדירה של שלושה חדרי שינה מטבח ושירותים מקלחת וסלון';
   try {
-    const todoist_api_key = process.env.TODOIST_API_TOKEN;
-    const anthropic_api_key = process.env.ANTHROPIC_API_KEY;
+    const todoist_api_key = process.env.TODOIST_API_TOKEN || '';
+    const anthropic_api_key = process.env.ANTHROPIC_API_KEY || '';
     const endpoints = await aiService.determineRequiredFetches(
       userInstruction,
       anthropic_api_key,

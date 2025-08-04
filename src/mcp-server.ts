@@ -84,12 +84,7 @@ server.setRequestHandler(
         error instanceof Error ? error.message : 'Unknown error occurred';
 
       return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `❌ Error: ${errorMessage}`,
-          },
-        ],
+        content: `❌ Error: ${errorMessage}`,
         isError: true,
       };
     }

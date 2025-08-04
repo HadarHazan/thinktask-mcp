@@ -33,12 +33,7 @@ export class McpController {
         error.stack,
       );
       return {
-        content: [
-          {
-            type: 'text',
-            text: `❌ Tool execution failed: ${error.message}`,
-          },
-        ],
+        content: `❌ Tool execution failed: ${error.message}`,
         isError: true,
       };
     }
