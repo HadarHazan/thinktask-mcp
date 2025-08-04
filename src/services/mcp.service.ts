@@ -40,7 +40,6 @@ export class McpService {
   ) {}
 
   async handleToolCall(toolCall: McpToolCall): Promise<McpToolResult> {
-    debugger;
     try {
       switch (toolCall.name) {
         case 'plan_intelligent_tasks':

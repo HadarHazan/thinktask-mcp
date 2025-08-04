@@ -82,19 +82,25 @@ project structure with sections and tasks, capturing all relevant details, depen
 ## 4. TIME PARSING RULES
 
 ### Time Calculation:
-- **Relative times** ("in 2 hours", "in 3 days") → Add to current UTC time
-- **Absolute times** ("tomorrow at 9 AM", "Monday at 6 PM") → User's local time → convert to UTC
+### Time Parsing Rules:
 
-### Output Format:
-- \`due_string\`: Natural English expression (e.g., "tomorrow at 9:00 AM")
-- \`due_date\`: UTC ISO 8601 with Z (e.g., "2025-08-02T06:00:00Z")
+### Time Calculation:
+- **Relative times** ("in 2 hours", "in 3 days") → Add to current UTC time
+- **Absolute times** ("tomorrow at 9 AM", "Monday at 6 PM") → Use ONLY \`due_string\` field, let Todoist API handle timezone conversion automatically
+
+### Output Format for Relative Times:
+- \`due_string\`: Natural English expression (e.g., "in 2 hours")
+- \`due_date\`: UTC ISO 8601 with Z (e.g., "2025-08-02T12:00:00Z")
+
+### Output Format for Absolute Times:
+- \`due_string\`: Todoist-compatible natural English expression (e.g., "tomorrow at 8:00 AM")
+- ❌ Do NOT include \`due_date\` field at all - Todoist parses \`due_string\` and calculates the actual datetime automatically
 
 ### Critical Requirements:
-- ⚠️ Never leave relative expressions in \`due_string\` like "at 10:00" - always full expressions
-- ⚠️ Always ensure \`due_date\` matches \`due_string\` after local-to-UTC conversion
+- ⚠️ For absolute times: Never leave relative expressions in \`due_string\` like "at 10:00" - always full expressions like "tomorrow at 10:00"
+- ⚠️ For relative times: Always ensure \`due_date\` matches \`due_string\` after UTC calculation
 - ⚠️ Use dynamic calculations from current system time - never hardcoded dates
-- ⚠️ \`due_string\` must be in English (Todoist requirement), \`due_date\` in UTC ISO 8601
-
+- ⚠️ \`due_string\` must be in English (Todoist requirement)
 ---
 
 ## 5. PROJECT STRUCTURE RULES
