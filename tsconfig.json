@@ -1,27 +1,26 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
     "sourceMap": true,
-    "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./",
     "incremental": true,
-    "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test/**/*"]
+  "include": ["src"]
 }
