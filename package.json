@@ -1,7 +1,6 @@
 {
   "name": "thinktask-mcp",
   "version": "1.0.18",
-  "type": "module",
   "description": "ThinkTask: Intelligent Todoist MCP Service - Transform natural language into perfect Todoist structure",
   "author": "Hadar Hazan",
   "license": "MIT",

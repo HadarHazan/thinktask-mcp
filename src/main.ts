@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { validateAnthropicConfig } from './config/anthropic.config';
+import { validateAnthropicConfig } from './config/anthropic.config.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');

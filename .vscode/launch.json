@@ -15,6 +15,16 @@
       "disableOptimisticBPs": true
     },
     {
+      "name": "Debug NestJS (yarn start)",
+      "type": "pwa-node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["start"],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Debug ts-node test-siri.ts",

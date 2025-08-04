@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { TasksService } from './tasks.service';
-import { PlanTasksDto } from 'src/dto/mcp.dto';
+import { PlanTasksDto } from '../dto/mcp.dto';
 
 export interface McpToolCall {
   name: string;
@@ -40,6 +40,7 @@ export class McpService {
   ) {}
 
   async handleToolCall(toolCall: McpToolCall): Promise<McpToolResult> {
+    debugger;
     try {
       switch (toolCall.name) {
         case 'plan_intelligent_tasks':
