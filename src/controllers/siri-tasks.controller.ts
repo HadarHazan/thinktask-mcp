@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Header } from '@nestjs/common';
 import { McpService } from '../services/mcp.service';
 
 @Controller('api/siri-task')
@@ -6,6 +6,7 @@ export class SiriTasksController {
   constructor(private readonly mcpService: McpService) {}
 
   @Post()
+  @Header('Content-Type', 'text/plain; charset=utf-8')
   async handleSiriTask(
     @Body()
     body: {
