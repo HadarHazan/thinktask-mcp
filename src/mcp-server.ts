@@ -7,9 +7,9 @@ import {
   ListToolsRequestSchema,
   CallToolRequest,
 } from '@modelcontextprotocol/sdk/types.js';
-import { AiService } from './services/ai.service.js';
-import { TasksService } from './services/tasks.service.js';
-import { McpService } from './services/mcp.service.js';
+import { AiService } from './services/ai.service';
+import { TasksService } from './services/tasks.service';
+import { McpService } from './services/mcp.service';
 import { HttpService } from '@nestjs/axios';
 import { Logger } from '@nestjs/common';
 
