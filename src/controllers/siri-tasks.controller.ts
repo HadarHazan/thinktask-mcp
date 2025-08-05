@@ -12,7 +12,7 @@ export class SiriTasksController {
     body: {
       text: string;
       todoiestApiKey?: string;
-      anthropic_api_key?: string;
+      anthropicApiKey?: string;
     },
   ) {
     const result = await this.mcpService.handleToolCall({
@@ -20,7 +20,7 @@ export class SiriTasksController {
       arguments: {
         instruction: body.text,
         todoist_api_key: body.todoiestApiKey || 'todoiestApiKey',
-        anthropic_api_key: body.anthropic_api_key || 'anthropic_api_key',
+        anthropic_api_key: body.anthropicApiKey || 'anthropicApiKey',
       },
     });
     return result.content;
