@@ -66,8 +66,8 @@ export class AiService {
     if (!text?.trim()) {
       throw new Error('Input text must be a non-empty string');
     }
-    // Use Claude from the MCP context - no API key needed
-    // This will be handled by the Claude Desktop environment
+    this.logger.log(`user instructions ${text}`);
+
     const anthropic = new Anthropic({
       apiKey: anthropic_api_key,
     });
