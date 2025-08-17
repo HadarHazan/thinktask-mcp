@@ -41,6 +41,7 @@ export class McpController {
 
   @Get('health')
   health() {
+    this.logger.log('Health check endpoint called');
     return {
       status: 'healthy',
       service: 'ThinkTask MCP Service',
@@ -56,7 +57,7 @@ export class McpController {
       description:
         'Transform any natural language instruction into perfect Todoist structure',
       version: '1.0.0',
-      author: 'Your Name',
+      author: 'Hadar Hazan',
       capabilities: [
         'Natural language task planning',
         'Intelligent project breakdown',
