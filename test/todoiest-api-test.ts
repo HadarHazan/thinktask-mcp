@@ -11,9 +11,21 @@ async function bootstrap() {
   const todoist_api_key = process.env.TODOIST_API_TOKEN;
   const anthropic_api_key = process.env.ANTHROPIC_API_KEY;
 
+  if (!todoist_api_key) {
+    throw new Error('TODOIST_API_TOKEN environment variable is required');
+  }
+
+  if (!anthropic_api_key) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is required');
+  }
+
   const testCases: { instruction: string }[] = [
     // Create project
     { instruction: 'Create a new project for personal stuff' },
+    {
+      instruction:
+        'Create a new project cleaning appartment and plan a room cleanning plan for 2 rooms and kitchen',
+    },
 
     // Add tasks
     { instruction: 'Add a task to call Adi tommorow ' },
@@ -48,9 +60,21 @@ async function bootstrap() {
 
     // Delete project
     { instruction: 'Delete the personal project' },
+    { instruction: 'Delete the cleaning appartment project' },
   ];
 
-  for (const testCase of testCases) {
+  // Helper function to add delay between test cases to avoid rate limiting
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  for (let i = 0; i < testCases.length; i++) {
+    const testCase = testCases[i];
+
+    // Add delay between test cases (except for the first one)
+    if (i > 0) {
+      console.log('⏳ Waiting 10 seconds to avoid rate limiting...');
+      await delay(10000);
+    }
     console.log('\n==============================');
     console.log(`📥 User Instruction: ${testCase.instruction}`);
     console.log('==============================');
@@ -61,6 +85,10 @@ async function bootstrap() {
         testCase.instruction,
         anthropic_api_key,
       );
+
+      // Add delay between AI calls to avoid rate limiting
+      console.log('⏳ Waiting 5 seconds between AI calls...');
+      await delay(5000);
 
       // Fetch necessary data from Todoist API
       const preparationData = await tasksService.executeEndpoints(
@@ -75,19 +103,6 @@ async function bootstrap() {
         anthropic_api_key,
       );
 
-      // Track newly created projects by their name
-      for (const action of actions) {
-        if (
-          action.endpoint === 'projects' &&
-          action.method === 'POST' &&
-          action.body &&
-          typeof action.body === 'object' &&
-          'name' in action.body
-        ) {
-          const body = action.body as { name: string };
-        }
-      }
-
       // Execute all generated actions on Todoist
       const results = await tasksService.executeActions(
         actions,
@@ -101,7 +116,7 @@ async function bootstrap() {
         console.log('✅ All actions executed successfully on Todoist');
       } else {
         console.log('❌ Some actions failed during execution:');
-        for (const [id, res] of results.entries()) {
+        for (const [id, res] of Array.from(results.entries())) {
           if (!res.success) {
             console.log(`  - Action ID ${id} failed with error: ${res.error}`);
           }
