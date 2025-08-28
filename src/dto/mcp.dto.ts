@@ -12,6 +12,10 @@ export class PlanTasksDto {
   @IsString()
   @IsOptional()
   anthropic_api_key?: string;
+
+  @IsString()
+  @IsOptional()
+  openai_api_key?: string;
 }
 
 export class McpToolCallDto {

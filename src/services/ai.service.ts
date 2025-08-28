@@ -1,15 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
+import { IAIProvider } from './ai-providers/ai-provider.interface';
+import { TodoistAction } from '../interfaces/todoist.interface';
+import { AIServiceConfig } from '../interfaces/ai.interface';
+import { AnthropicProvider } from './ai-providers/anthropic.provider';
+import { OpenAIProvider } from './ai-providers/openai.provider';
 import { determineRequiredPrompt } from './determineRequiredPrompt';
 import { parseTaskPrompt } from './parseTaskPrompt';
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
 
 @Injectable()
 export class AiService {
@@ -17,39 +13,16 @@ export class AiService {
 
   async determineRequiredFetches(
     text: string,
-    anthropic_api_key: string,
+    provider: IAIProvider,
   ): Promise<string[]> {
     if (!text?.trim()) {
       throw new Error('Input text must be a non-empty string');
     }
 
-    const anthropic = new Anthropic({
-      apiKey: anthropic_api_key,
-    });
-
     try {
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4000,
-        messages: [
-          {
-            role: 'user',
-            content: determineRequiredPrompt(text),
-          },
-        ],
-      });
-
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      const raw = content.text;
-      if (!raw) {
-        throw new Error('No response from AI');
-      }
-
-      return this.extractStringArrayFromText(raw);
+      const prompt = determineRequiredPrompt(text);
+      const response = await provider.callModel(prompt);
+      return this.extractStringArrayFromText(response);
     } catch (error) {
       this.logger.error('AI parsing failed:', error);
       throw new Error(
@@ -61,46 +34,67 @@ export class AiService {
   async parseTask(
     text: string,
     preparsionData: string,
-    anthropic_api_key: string,
+    provider: IAIProvider,
   ): Promise<TodoistAction[]> {
     if (!text?.trim()) {
       throw new Error('Input text must be a non-empty string');
     }
     this.logger.log(`user instructions ${text}`);
 
-    const anthropic = new Anthropic({
-      apiKey: anthropic_api_key,
-    });
-
     try {
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4000,
-        messages: [
-          {
-            role: 'user',
-            content: parseTaskPrompt(text, preparsionData),
-          },
-        ],
-      });
-
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      const raw = content.text;
-      if (!raw) {
-        throw new Error('No response from AI');
-      }
-
-      return this.extractJsonFromText(raw);
+      const prompt = parseTaskPrompt(text, preparsionData);
+      const response = await provider.callModel(prompt);
+      return this.extractJsonFromText(response);
     } catch (error) {
       this.logger.error('AI parsing failed:', error);
       throw new Error(
         `AI parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
+  }
+
+  createProvider(config: AIServiceConfig): IAIProvider {
+    const { provider, key } = this.selectProvider(config);
+
+    switch (provider) {
+      case 'anthropic':
+        return new AnthropicProvider(key);
+      case 'openai':
+        return new OpenAIProvider(key);
+      default:
+        throw new Error(`Unsupported AI provider: ${provider}`);
+    }
+  }
+
+  private selectProvider(config: AIServiceConfig): {
+    provider: 'anthropic' | 'openai';
+    key: string;
+  } {
+    // Resolve API keys from config or environment
+    const anthropicKey =
+      config.anthropic_api_key || process.env.ANTHROPIC_API_KEY;
+    const openaiKey = config.openai_api_key || process.env.OPENAI_API_KEY;
+
+    if (anthropicKey && !openaiKey) {
+      return { provider: 'anthropic', key: anthropicKey };
+    }
+
+    if (openaiKey && !anthropicKey) {
+      return { provider: 'openai', key: openaiKey };
+    }
+
+    if (anthropicKey && openaiKey) {
+      // Both available, prefer Anthropic for backward compatibility
+      this.logger.log(
+        'Both AI providers available, defaulting to Anthropic for backward compatibility',
+      );
+      return { provider: 'anthropic', key: anthropicKey };
+    }
+
+    // No keys available
+    throw new Error(
+      'No AI API key provided. Please provide either anthropic_api_key or openai_api_key.',
+    );
   }
 
   private extractJsonFromText(raw: string): TodoistAction[] {

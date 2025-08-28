@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Controller, Post, Body, Get, Logger } from '@nestjs/common';
-import {
-  McpService,
-  McpToolCall,
-  McpToolResult,
-} from '../services/mcp.service';
+import { McpService } from '../services/mcp.service';
+import { McpToolCall, McpToolResult } from '../interfaces/mcp.interface';
 
 @Controller('api/mcp')
 export class McpController {
@@ -65,14 +62,19 @@ export class McpController {
         'Multi-language support',
         'Dependency resolution',
         'Comprehensive project management',
+        'Multiple AI provider support',
       ],
       endpoints: {
         tools: '/api/mcp/tools',
         'call-tool': '/api/mcp/call-tool',
         health: '/api/mcp/health',
       },
-      ai_engine: 'Claude 3.5 Sonnet',
+      ai_providers: {
+        anthropic: 'Claude 3.5 Sonnet',
+        openai: 'GPT-4',
+      },
       integration: 'Todoist API v2',
+      supported_ai_providers: ['anthropic', 'openai'],
     };
   }
 }
