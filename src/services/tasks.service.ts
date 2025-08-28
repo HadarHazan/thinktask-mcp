@@ -184,7 +184,7 @@ export class TasksService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('Invalid Todoist API key:', errorMessage);
+      this.logger.error(`Invalid Todoist API key:${apiKey}.`, errorMessage);
       return false;
     }
   }
