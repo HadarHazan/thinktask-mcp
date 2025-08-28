@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { McpController } from './mcp.controller';
-import { McpService, McpToolCall } from '../services/mcp.service';
+import { McpService } from '../services/mcp.service';
+import { McpToolCall } from '../interfaces/mcp.interface';
 
 describe('McpController', () => {
   let controller: McpController;

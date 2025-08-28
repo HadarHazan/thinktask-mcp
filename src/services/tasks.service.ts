@@ -2,22 +2,12 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import {
+  TodoistAction,
+  ActionExecutionResult,
+} from '../interfaces/todoist.interface';
 
 const TODOIST_API_URL = 'https://api.todoist.com/rest/v2';
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
-
-interface ActionExecutionResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
 
 @Injectable()
 export class TasksService {

@@ -2,30 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { TasksService } from './tasks.service';
 import { PlanTasksDto } from '../dto/mcp.dto';
-
-export interface McpToolCall {
-  name: string;
-  arguments: PlanTasksDto;
-}
-
-export interface McpToolResult {
-  content: string;
-  isError?: boolean;
-}
-
-interface ActionExecutionResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
-
-interface TodoistAction {
-  id: string;
-  endpoint: string;
-  method: string;
-  body: Record<string, unknown>;
-  depends_on?: string | string[];
-}
+import {
+  TodoistAction,
+  ActionExecutionResult,
+} from '../interfaces/todoist.interface';
+import { AIServiceConfig } from '../interfaces/ai.interface';
+import { McpToolCall, McpToolResult } from '../interfaces/mcp.interface';
 
 @Injectable()
 export class McpService {
@@ -63,8 +45,13 @@ export class McpService {
     const { instruction } = args;
     const todoist_api_key =
       args.todoist_api_key || process.env.TODOIST_API_TOKEN;
-    const anthropic_api_key =
-      args.anthropic_api_key || process.env.ANTHROPIC_API_KEY;
+
+    // Create AI service configuration
+    const aiConfig: AIServiceConfig = {
+      anthropic_api_key:
+        args.anthropic_api_key || process.env.ANTHROPIC_API_KEY,
+      openai_api_key: args.openai_api_key || process.env.OPENAI_API_KEY,
+    };
 
     // Validate required parameters
     if (!instruction?.trim()) {
@@ -79,10 +66,14 @@ export class McpService {
       };
     }
 
-    if (!anthropic_api_key?.trim()) {
+    // Check if any AI provider is available
+    const hasAnthropicKey = !!aiConfig.anthropic_api_key;
+    const hasOpenAIKey = !!aiConfig.openai_api_key;
+
+    if (!hasAnthropicKey && !hasOpenAIKey) {
       return {
         content:
-          '⚠️ No ANTHROPIC Claude API key provided. Please provide a anthropic_api_key in the request or set the ANTHROPIC_API_KEY environment variable if you want to use claude ai features.',
+          '⚠️ No AI API key provided. Please provide either an anthropic_api_key or openai_api_key in the request, or set the ANTHROPIC_API_KEY or OPENAI_API_KEY environment variables.',
         isError: true,
       };
     }
@@ -95,22 +86,25 @@ export class McpService {
     }
 
     try {
+      // Create AI provider once for this request
+      const aiProvider = this.aiService.createProvider(aiConfig);
+
       const endpoints = await this.aiService.determineRequiredFetches(
         instruction,
-        anthropic_api_key,
+        aiProvider,
       );
-      this.logger.log('⚡ Executing Todoist API endpointa...');
+      this.logger.log('⚡ Executing Todoist API endpoints...');
       const preparsionData = await this.tasksService.executeEndpoints(
         endpoints,
         todoist_api_key,
       );
 
       // Parse the instruction with AI
-      this.logger.log('🤖 Processing instruction with Claude...');
+      this.logger.log('🤖 Processing instruction with AI...');
       const actions = await this.aiService.parseTask(
         instruction,
         preparsionData,
-        anthropic_api_key,
+        aiProvider,
       );
 
       this.logger.log(`📋 Generated ${actions.length} actions to execute`);
@@ -252,6 +246,7 @@ export class McpService {
         {
           type: string;
           description: string;
+          enum?: string[];
         }
       >;
       required: string[];
@@ -261,7 +256,7 @@ export class McpService {
       {
         name: 'plan_intelligent_tasks',
         description:
-          'Transform any natural language instruction into comprehensive Todoist projects, sections, and tasks with intelligent scheduling and organization. This is the core ThinkTask functionality that goes beyond simple task creation to provide real project planning.',
+          'Transform any natural language instruction into comprehensive Todoist projects, sections, and tasks with intelligent scheduling and organization. Supports both Anthropic Claude and OpenAI GPT models for AI-powered task planning.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -274,6 +269,16 @@ export class McpService {
               type: 'string',
               description:
                 'Your Todoist API key (optional). If not provided, the service will use the TODOIST_API_TOKEN environment variable.',
+            },
+            anthropic_api_key: {
+              type: 'string',
+              description:
+                'Your Anthropic API key (optional). If not provided, the service will use the ANTHROPIC_API_KEY environment variable.',
+            },
+            openai_api_key: {
+              type: 'string',
+              description:
+                'Your OpenAI API key (optional). If not provided, the service will use the OPENAI_API_KEY environment variable. The service will automatically detect which AI provider to use based on the provided API keys.',
             },
           },
           required: ['instruction'],
