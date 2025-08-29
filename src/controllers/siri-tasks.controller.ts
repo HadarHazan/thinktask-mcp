@@ -9,7 +9,7 @@ export class SiriTasksController {
   health() {
     return {
       status: 'healthy',
-      service: 'ThinkTask MCP Service',
+      service: 'ThinkTask Siri Task Service',
       timestamp: new Date().toISOString(),
       version: '1.0.0',
       endpoint: 'siri-task',

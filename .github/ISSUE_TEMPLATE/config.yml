@@ -1,0 +1,6 @@
+# All comments must be in English only.
+blank_issues_enabled: false
+contact_links:
+  - name: General question or discussion
+    url: https://github.com/YOUR_ORG_OR_USER/YOUR_REPO/discussions
+    about: Use discussions for non-actionable topics.
