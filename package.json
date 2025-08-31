@@ -26,7 +26,15 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "ci:typecheck": "tsc -p tsconfig.json --noEmit",
+    "ci:lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings=0",
+    "ci:test": "jest --runInBand",
+    "ci:test:e2e": "jest --config ./test/jest-e2e.json --runInBand --passWithNoTests",
+    "ci:test:integration": "ts-node test/todoiest-api-test.ts",
+    "ci:all": "npm run ci:typecheck && npm run ci:lint && npm run ci:test && npm run ci:test:e2e && npm run ci:test:integration",
+    "verify": "npm run ci:all",
+    "prepare": "husky"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
@@ -54,6 +62,7 @@
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^9.1.7",
     "jest": "^29.5.0",
     "prettier": "^3.0.0",
     "source-map-support": "^0.5.21",

@@ -40,11 +40,10 @@ jobs:
           yarn install --frozen-lockfile || yarn install
 
       - name: Typecheck
-        run: yarn tsc -p tsconfig.json --noEmit
+        run: yarn ci:typecheck
 
       - name: Lint
-        # Run eslint directly to avoid accidental --fix from local scripts
-        run: yarn eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
+        run: yarn ci:lint
 
       - name: Decide if we can run integration tests
         id: gate
@@ -64,16 +63,16 @@ jobs:
           echo "run_e2e=${RUN_E2E}" >> $GITHUB_OUTPUT
 
       - name: Unit tests
-        run: yarn test --runInBand
+        run: yarn ci:test
 
       - name: Integration tests (Jest E2E)
         if: env.RUN_E2E == 'true'
-        run: yarn test:e2e --runInBand --passWithNoTests
+        run: yarn ci:test:e2e
 
       - name: Integration tests (Todoist API)
         if: env.RUN_E2E == 'true'
         timeout-minutes: 15
-        run: yarn ts-node test/todoiest-api-test.ts
+        run: yarn ci:test:integration
 
       - name: Upload artifacts on failure
         if: failure()
