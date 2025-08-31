@@ -66,9 +66,14 @@ jobs:
       - name: Unit tests
         run: yarn test --runInBand
 
-      - name: Integration tests (Todoist)
+      - name: Integration tests (Jest E2E)
         if: env.RUN_E2E == 'true'
-        run: yarn test:e2e --runInBand
+        run: yarn test:e2e --runInBand --passWithNoTests
+
+      - name: Integration tests (Todoist API)
+        if: env.RUN_E2E == 'true'
+        timeout-minutes: 15
+        run: yarn ts-node test/todoiest-api-test.ts
 
       - name: Upload artifacts on failure
         if: failure()

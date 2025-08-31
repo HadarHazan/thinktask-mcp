@@ -124,7 +124,6 @@ export class McpService {
 
       // Format the response
       const createdItems = this.formatCreatedItems(results, actions);
-      const summary = this.generateSummary(actions, results);
 
       return {
         content: `✅ **Plan created successfully!** ${createdItems}`,
@@ -158,20 +157,28 @@ export class McpService {
     return items.length > 0 ? items.join('\n') : 'No items created';
   }
 
-  private getDateInfo(action: TodoistAction, data: any): string {
+  private getDateInfo(action: TodoistAction, data: unknown): string {
     let dueString = '';
     let dueDate = '';
 
     // Try to get from action body
     if (action.body) {
-      dueString = (action.body as any).due_string || '';
-      dueDate = (action.body as any).due_date || '';
+      dueString =
+        typeof action.body.due_string === 'string'
+          ? action.body.due_string
+          : '';
+      dueDate =
+        typeof action.body.due_date === 'string' ? action.body.due_date : '';
     }
 
     // Try to get from result data
-    if (data && typeof data === 'object' && data.due) {
-      dueString = data.due.string || dueString;
-      dueDate = data.due.date || dueDate;
+    if (data && typeof data === 'object' && data !== null) {
+      const obj = data as Record<string, unknown>;
+      if (obj.due && typeof obj.due === 'object' && obj.due !== null) {
+        const due = obj.due as Record<string, unknown>;
+        dueString = typeof due.string === 'string' ? due.string : dueString;
+        dueDate = typeof due.date === 'string' ? due.date : dueDate;
+      }
     }
 
     if (dueString) {

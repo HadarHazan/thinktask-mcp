@@ -138,8 +138,17 @@ export class AiService {
           id: action.id,
           endpoint: action.endpoint,
           method: action.method,
-          body: action.body as Record<string, unknown>,
-          depends_on: action.depends_on as string | string[] | undefined,
+          body:
+            action.body &&
+            typeof action.body === 'object' &&
+            action.body !== null
+              ? (action.body as Record<string, unknown>)
+              : {},
+          depends_on:
+            Array.isArray(action.depends_on) ||
+            typeof action.depends_on === 'string'
+              ? (action.depends_on as string | string[])
+              : undefined,
         };
       });
 
@@ -172,7 +181,7 @@ export class AiService {
     }
 
     try {
-      const parsed = JSON.parse(jsonString);
+      const parsed = JSON.parse(jsonString) as unknown;
 
       // 4. Validate that the parsed result is an array
       if (!Array.isArray(parsed)) {

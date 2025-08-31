@@ -15,11 +15,11 @@ import { Logger } from '@nestjs/common';
 
 // Patch NestJS logger to use stderr only
 Logger.overrideLogger({
-  log: (...args: any[]) => console.error(...args),
-  error: (...args: any[]) => console.error(...args),
-  warn: (...args: any[]) => console.error(...args),
-  debug: (...args: any[]) => {},
-  verbose: (...args: any[]) => {},
+  log: (...args: unknown[]) => console.error(...args),
+  error: (...args: unknown[]) => console.error(...args),
+  warn: (...args: unknown[]) => console.error(...args),
+  debug: () => {},
+  verbose: () => {},
 });
 
 interface ToolArguments {

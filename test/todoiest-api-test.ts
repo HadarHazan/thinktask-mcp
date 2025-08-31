@@ -24,7 +24,8 @@ async function bootstrap() {
     { instruction: 'Create a new project for personal stuff' },
     {
       instruction:
-        'Create a new project cleaning appartment and plan a room cleanning plan for 2 rooms and kitchen',
+        'Create a new project cleaning appartment and plan a kitchen clienin
+        ',
     },
 
     // Add tasks
@@ -35,15 +36,10 @@ async function bootstrap() {
     },
 
     // Add labels
-    { instruction: 'Create a label named Leisure' },
     { instruction: 'Tag the task about calling Adi with the Phone label' },
-    {
-      instruction: 'Tag the task about buying the book with the Leisure label',
-    },
 
     // Remove labels
     { instruction: 'Remove the Urgent label from the meeting task' },
-    { instruction: 'Delete the label named Leisure' },
 
     // Complete
     { instruction: 'Mark the task to call Adi as done' },
@@ -123,11 +119,15 @@ async function bootstrap() {
         }
       }
     } catch (err) {
-      console.error('❌ Test Failed with error:', err.message || err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('❌ Test Failed with error:', errorMessage);
     }
   }
 
   await app.close();
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Bootstrap failed:', error);
+  process.exit(1);
+});
