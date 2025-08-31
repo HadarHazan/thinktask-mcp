@@ -3,21 +3,21 @@ import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 export class PlanTasksDto {
   @IsString()
   @IsNotEmpty()
-  instruction: string;
+  declare instruction: string;
 
   @IsString()
   @IsOptional()
-  todoist_api_key: string;
+  declare todoist_api_key: string;
 
   @IsString()
   @IsOptional()
-  anthropic_api_key?: string;
+  declare anthropic_api_key?: string;
 }
 
 export class McpToolCallDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  declare name: string;
 
-  arguments: PlanTasksDto;
+  declare arguments: PlanTasksDto;
 }

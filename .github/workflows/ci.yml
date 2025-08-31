@@ -6,7 +6,7 @@ on:
   push:
     branches:
       - agent/**
-      # - main  # uncomment if you also want CI on direct pushes to main
+      - main
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 25
     env:
       NODE_ENV: test
-      # Secrets will be empty on forks, which is fine
+      # expose secrets to steps; will be empty on forks
       TODOIST_API_TOKEN: ${{ secrets.TODOIST_API_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -44,6 +44,31 @@ jobs:
 
       - name: Lint
         run: yarn ci:lint
+
+      - name: Unit tests
+        run: yarn ci:test
+
+      - name: Decide if we can run E2E/Integration
+        id: gate
+        shell: bash
+        run: |
+          RUN_E2E=false
+          if [[ -n "${TODOIST_API_TOKEN}" && -n "${ANTHROPIC_API_KEY}" ]]; then
+            if [[ "${{ github.event_name }}" == "push" ]]; then
+              RUN_E2E=true
+            elif [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.head.repo.fork }}" == "false" ]]; then
+              RUN_E2E=true
+            fi
+          fi
+          echo "RUN_E2E=${RUN_E2E}" >> "$GITHUB_ENV"
+
+      - name: Test E2E
+        if: env.RUN_E2E == 'true'
+        run: yarn ci:test:e2e
+
+      - name: Test Integration
+        if: env.RUN_E2E == 'true'
+        run: yarn ci:test:integration
 
       - name: Upload artifacts on failure
         if: failure()

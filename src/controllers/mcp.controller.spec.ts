@@ -60,7 +60,7 @@ describe('McpController', () => {
     });
 
     it('should catch error and return fallback content', async () => {
-      mockService.handleToolCall.mockRejectedValueOnce(new Error('Boom!'));
+      mockService.handleToolCall?.mockRejectedValueOnce(new Error('Boom!'));
 
       const request: McpToolCall = {
         name: 'badTool',

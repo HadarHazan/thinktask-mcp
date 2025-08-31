@@ -135,6 +135,9 @@ export class TasksService {
     if (typeof value === 'string') {
       return value.replace(/\{([^}]+)\}/g, (_, key: string) => {
         const [refId, prop] = key.split('.');
+        if (!refId) {
+          return '';
+        }
         const result = results.get(refId);
 
         if (!result?.success || !result.data) {

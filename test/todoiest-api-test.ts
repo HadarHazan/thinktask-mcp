@@ -66,7 +66,7 @@ async function bootstrap() {
 
     // Delete labels
     { instruction: 'Delete the label named Leisure', critical: false },
-    { instruction: 'Remove the label named Urgent', critical: false },
+    { instruction: 'Delete the label named Urgent', critical: false },
 
     // Delete projects
     { instruction: 'Delete the personal project', critical: true },
@@ -115,6 +115,9 @@ async function bootstrap() {
 
   for (let i = 0; i < testCases.length; i++) {
     const testCase = testCases[i];
+    if (!testCase) {
+      continue;
+    }
     totalTests++;
 
     // Add delay between test cases (except for the first one)
