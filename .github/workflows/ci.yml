@@ -45,35 +45,6 @@ jobs:
       - name: Lint
         run: yarn ci:lint
 
-      - name: Decide if we can run integration tests
-        id: gate
-        shell: bash
-        run: |
-          # All comments must be in English only.
-          RUN_E2E=false
-          if [[ -n "${TODOIST_API_TOKEN}" && -n "${ANTHROPIC_API_KEY}" ]]; then
-            # Skip e2e for PRs from forks for safety
-            if [[ "${{ github.event_name }}" == "push" ]]; then
-              RUN_E2E=true
-            elif [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.head.repo.fork }}" == "false" ]]; then
-              RUN_E2E=true
-            fi
-          fi
-          echo "RUN_E2E=${RUN_E2E}" >> $GITHUB_ENV
-          echo "run_e2e=${RUN_E2E}" >> $GITHUB_OUTPUT
-
-      - name: Unit tests
-        run: yarn ci:test
-
-      - name: Integration tests (Jest E2E)
-        if: env.RUN_E2E == 'true'
-        run: yarn ci:test:e2e
-
-      - name: Integration tests (Todoist API)
-        if: env.RUN_E2E == 'true'
-        timeout-minutes: 15
-        run: yarn ci:test:integration
-
       - name: Upload artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4

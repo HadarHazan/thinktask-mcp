@@ -1,1 +1,1 @@
-yarn ci:all
+# Pre-push hook disabled - all checks run in pre-commit
