@@ -149,7 +149,7 @@ export class McpService {
         const emoji = this.getEmojiForEndpoint(action.endpoint);
         const name = this.extractNameFromResult(result.data) || 'Unnamed item';
 
-        let dateInfo = this.getDateInfo(action, result.data);
+        const dateInfo = this.getDateInfo(action, result.data);
 
         items.push(`${emoji} ${name}${dateInfo}`);
       }
