@@ -19,15 +19,70 @@ async function bootstrap() {
     throw new Error('ANTHROPIC_API_KEY environment variable is required');
   }
 
-  // Simplified test cases for CI - focus on core functionality
+  // Comprehensive test cases covering all functionality
   const testCases: { instruction: string; critical: boolean }[] = [
-    // Core functionality tests
+    // Create projects
+    { instruction: 'Create a new project for personal stuff', critical: true },
     {
-      instruction: 'Create a new project for testing integration',
+      instruction:
+        'Create a new project cleaning appartment and plan a kitchen cleaning',
       critical: true,
     },
-    { instruction: 'Add a task to call someone tomorrow', critical: true },
-    { instruction: 'Delete the testing integration project', critical: true },
+
+    // Add tasks with labels
+    {
+      instruction: 'Add a task to call Adi tommorow and tag it as urgent',
+      critical: true,
+    },
+    {
+      instruction: 'Add a task to buy a book to the personal project',
+      critical: true,
+    },
+
+    // Add task about meeting
+    {
+      instruction: 'Add a task about a meeting with Ella and tag it as urgent',
+      critical: false,
+    },
+
+    // Create labels
+    { instruction: 'Create a label named Leisure', critical: false },
+
+    // Tag tasks with labels
+    {
+      instruction: 'Tag the task about calling Adi with the Phone label',
+      critical: false,
+    },
+    {
+      instruction: 'Tag the task about buying the book with the Leisure label',
+      critical: false,
+    },
+
+    // Remove labels
+    {
+      instruction: 'Remove the Urgent label from the meeting task',
+      critical: false,
+    },
+
+    // Complete tasks
+    { instruction: 'Mark the task to call Adi as done', critical: false },
+
+    // Delete tasks
+    { instruction: 'Delete the task about buying the book', critical: false },
+    {
+      instruction:
+        'Delete the task about a meeting with Ella and tag it as urgent',
+      critical: false,
+    },
+
+    // Delete labels
+    { instruction: 'Remove the label named Phone', critical: false },
+    { instruction: 'Delete the label named Leisure', critical: false },
+    { instruction: 'Remove the label named Urgent', critical: false },
+
+    // Delete projects
+    { instruction: 'Delete the personal project', critical: true },
+    { instruction: 'Delete the cleaning appartment project', critical: true },
   ];
 
   // Helper function to add delay between test cases to avoid rate limiting
