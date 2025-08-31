@@ -64,4 +64,7 @@ async function bootstrap() {
   await app.close();
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Bootstrap failed:', error);
+  process.exit(1);
+});

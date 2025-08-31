@@ -39,14 +39,16 @@ export class TasksService {
             }),
           );
 
-          const data = response.data;
+          const data = response.data as unknown;
 
           // Format as text for the AI prompt
           const formatted = `Existing ${endpoint}:\n\n"""${JSON.stringify(data, null, 2)}"""\n`;
           resultParts.push(formatted);
         } catch (error) {
           // Optional: log or handle the error per endpoint
-          console.warn(`❌ Failed to fetch ${endpoint}:`, error.message);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          console.warn(`❌ Failed to fetch ${endpoint}:`, errorMessage);
         }
       }),
     );
@@ -133,6 +135,9 @@ export class TasksService {
     if (typeof value === 'string') {
       return value.replace(/\{([^}]+)\}/g, (_, key: string) => {
         const [refId, prop] = key.split('.');
+        if (!refId) {
+          return '';
+        }
         const result = results.get(refId);
 
         if (!result?.success || !result.data) {
@@ -140,9 +145,17 @@ export class TasksService {
         }
 
         if (!prop) {
-          return typeof result.data === 'object' && result.data !== null
-            ? JSON.stringify(result.data)
-            : String(result.data);
+          if (
+            typeof result.data === 'string' ||
+            typeof result.data === 'number' ||
+            typeof result.data === 'boolean'
+          ) {
+            return String(result.data);
+          }
+          if (typeof result.data === 'object' && result.data !== null) {
+            return JSON.stringify(result.data);
+          }
+          return '';
         }
 
         const data = result.data as Record<string, unknown>;
@@ -152,9 +165,17 @@ export class TasksService {
           return '';
         }
 
-        return typeof replacement === 'object'
-          ? JSON.stringify(replacement)
-          : String(replacement);
+        if (
+          typeof replacement === 'string' ||
+          typeof replacement === 'number' ||
+          typeof replacement === 'boolean'
+        ) {
+          return String(replacement);
+        }
+        if (typeof replacement === 'object' && replacement !== null) {
+          return JSON.stringify(replacement);
+        }
+        return '';
       });
     }
 

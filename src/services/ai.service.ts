@@ -40,6 +40,9 @@ export class AiService {
       });
 
       const content = response.content[0];
+      if (!content) {
+        throw new Error('No content in Claude response');
+      }
       if (content.type !== 'text') {
         throw new Error('Unexpected response type from Claude');
       }
@@ -85,6 +88,9 @@ export class AiService {
       });
 
       const content = response.content[0];
+      if (!content) {
+        throw new Error('No content in Claude response');
+      }
       if (content.type !== 'text') {
         throw new Error('Unexpected response type from Claude');
       }
@@ -108,6 +114,10 @@ export class AiService {
     const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
     const match = raw.match(jsonRegex);
     const jsonString = match ? match[1] : raw.trim();
+
+    if (!jsonString) {
+      throw new Error('No JSON content found in AI response');
+    }
 
     try {
       const parsed = JSON.parse(jsonString) as unknown;
@@ -138,8 +148,17 @@ export class AiService {
           id: action.id,
           endpoint: action.endpoint,
           method: action.method,
-          body: action.body as Record<string, unknown>,
-          depends_on: action.depends_on as string | string[] | undefined,
+          body:
+            action.body &&
+            typeof action.body === 'object' &&
+            action.body !== null
+              ? (action.body as Record<string, unknown>)
+              : {},
+          depends_on:
+            Array.isArray(action.depends_on) ||
+            typeof action.depends_on === 'string'
+              ? (action.depends_on as string | string[])
+              : undefined,
         };
       });
 
@@ -157,7 +176,7 @@ export class AiService {
     // 1. Try to extract JSON code block from ```json ... ```
     const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
     const codeBlockMatch = raw.match(codeBlockRegex);
-    let jsonString = codeBlockMatch?.[1]?.trim();
+    let jsonString: string | undefined = codeBlockMatch?.[1]?.trim();
 
     // 2. If not found, look for the first array in the text (between square brackets)
     if (!jsonString) {
@@ -171,8 +190,11 @@ export class AiService {
       throw new Error('Could not find JSON array in AI response');
     }
 
+    // At this point, jsonString is guaranteed to be a string
+    const validJsonString: string = jsonString;
+
     try {
-      const parsed = JSON.parse(jsonString);
+      const parsed = JSON.parse(validJsonString) as unknown;
 
       // 4. Validate that the parsed result is an array
       if (!Array.isArray(parsed)) {

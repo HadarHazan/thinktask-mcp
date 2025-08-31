@@ -1,0 +1,39 @@
+# All comments must be in English only.
+# Minimal, safe policy for ThinkTask NestJS repo.
+
+repo:
+  allowed_paths:
+    - "src/**"
+    - "test/**"
+  excluded_paths:
+    - "test/test-siri.ts"   # do not touch this file
+    - "dist/**"
+    - "node_modules/**"
+    - "**/*.lock"
+    - "**/*.tgz"
+
+planning:
+  max_files_considered: 40
+  prefer_small_patches: true
+  require_tests: true
+
+commit:
+  branch_prefix: "agent/"
+  conventional_commits: true
+  pr_title_prefix: "AI: "
+  pr_template:
+    path: ".github/pull_request_template.md"
+
+quality:
+  run_lint: true
+  run_tests: true
+  run_typecheck: true
+  fail_on_warnings: false
+  test_command: "yarn test --runInBand"   # Sweep: unit-only before PR
+  lint_command: "yarn eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings=0"
+  typecheck_command: "yarn tsc -p tsconfig.json --noEmit"
+
+safety:
+  allow_dep_changes: false
+  allow_config_changes: false
+  max_diff_lines: 400

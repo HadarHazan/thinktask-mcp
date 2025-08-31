@@ -65,6 +65,37 @@ To use ThinkTask as an MCP tool in Claude Desktop, add the following to your `mc
 
 Once added, Claude Desktop will be able to call ThinkTask as a tool and return structured tasks directly to Todoist.
 
+## 🛠️ Development
+
+### Local Testing & Verification
+
+Before pushing changes, run the complete CI verification locally:
+
+```bash
+# Run all CI checks locally (same as CI pipeline)
+yarn ci:all
+
+# Or run individual checks:
+yarn ci:typecheck    # TypeScript compilation
+yarn ci:lint         # ESLint with no warnings
+yarn ci:test         # Unit tests
+yarn ci:test:e2e     # Jest E2E tests
+yarn ci:test:integration  # Integration test with Todoist API
+```
+
+### Pre-push Hook
+
+A git pre-push hook automatically runs `yarn ci:all` before every push to ensure code quality. This prevents broken code from reaching CI.
+
+### Environment Setup
+
+Create a `.env` file with your API keys for local testing:
+
+```bash
+TODOIST_API_TOKEN=your_todoist_api_token
+ANTHROPIC_API_KEY=your_anthropic_api_key
+```
+
 ## 🔧 API Endpoints
 
 - **GET** `/api/mcp` - Service information

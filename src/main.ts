@@ -47,4 +47,7 @@ async function bootstrap() {
   logger.log(`❤️ Health check: http://${host}:${port}/api/mcp/health`);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});

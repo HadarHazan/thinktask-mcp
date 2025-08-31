@@ -27,15 +27,23 @@ export class McpController {
       const result = await this.mcpService.handleToolCall(request);
       this.logger.log(`✅ Tool execution completed: ${request.name}`);
       return result;
-    } catch (error) {
-      this.logger.error(
-        `❌ Tool execution failed: ${error.message}`,
-        error.stack,
-      );
-      return {
-        content: `❌ Tool execution failed: ${error.message}`,
-        isError: true,
-      };
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        this.logger.error(
+          `❌ Tool execution failed: ${err.message}`,
+          err.stack,
+        );
+        return {
+          content: `❌ Tool execution failed: ${err.message}`,
+          isError: true,
+        };
+      } else {
+        this.logger.error(`❌ Tool execution failed: ${String(err)}`);
+        return {
+          content: `❌ Tool execution failed: ${String(err)}`,
+          isError: true,
+        };
+      }
     }
   }
 
