@@ -25,17 +25,19 @@ async function bootstrap() {
     { instruction: 'Create a new project for personal stuff', critical: true },
     {
       instruction:
-        'Create a new project cleaning appartment and plan a kitchen cleaning',
+        'Create a new project cleaning store and plan a kitchen cleaning',
       critical: true,
     },
 
     // Add tasks with labels
     {
-      instruction: 'Add a task to call Adi tommorow and tag it as urgent',
+      instruction:
+        'Add a task to call Adi tomorrow at 3pm and tag it as urgent',
       critical: true,
     },
     {
-      instruction: 'Add a task to buy a book to the personal project',
+      instruction:
+        'Add a task to buy a book once a month to the personal project',
       critical: true,
     },
 
@@ -70,7 +72,7 @@ async function bootstrap() {
 
     // Delete projects
     { instruction: 'Delete the personal project', critical: true },
-    { instruction: 'Delete the cleaning appartment project', critical: true },
+    { instruction: 'Delete the cleaning store project', critical: true },
   ];
 
   // Helper function to add delay between test cases to avoid rate limiting
